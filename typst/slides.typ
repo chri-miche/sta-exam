@@ -53,6 +53,11 @@
   )),
 )
 
+// key concept
+#let key(body) = [🗝️ #body]
+
+#let def(body) = [#underline[#emph[_def_]] #body]
+
 #let today = datetime.today().display("[day]/[month]/[year]")
 
 #show: unipd-theme.with(author: "Christian Micheletti", date: today)
@@ -94,12 +99,16 @@
 
   W.l.o.g.#footnote[Without loss of generality.] we adopt a model of execution divided in #emph[communication rounds]
 
-  Each round, for a node $v in V$ consists in those #emph[synchronized] actions:
+  Each round, a node $v in V$ performs this actions:
   1. $v$ #emph[sends] messages to its neighbours;
   2. $v$ #emph[receives] messages from its neighbours;
   3. $v$ #emph[executes locally] some algorithm (same for each node)
   
-  #note[Complexity is measured in #emph[rounds]]
+  W.l.o.g. rounds are #emph[synchronized]
+
+  #key[Complexity is measured in #emph[rounds]]
+
+  We say #emph[efficient] meaning $O("polylog" n)$, where $n = |V|$
 ]
 
 #slide(
@@ -110,7 +119,7 @@
 
   Solving it in a centralized model is easily done with a greedy algorithm
 
-  #note["*Centralized*" $equiv$ "*knowing the graph topology*"]
+  #def["*Centralized*" $equiv$ "*knowing the graph topology*"]
 
   We aim to solve graph problems on networks
 
@@ -122,8 +131,53 @@
   new-section: "Models"
 )[
 
-  What do we see then?
-  
+  What can a node see?
+
+  #set align(center)
+  #cetz.canvas({
+    import cetz.draw: *
+
+    set-style(stroke: (paint: teal.darken(30%), thickness: 2pt))
+
+    line((-1.5, 0), (0, 0))
+    line((-1.5, 0), (-3, 0), stroke: (dash: "dashed"))
+    circle((-3, 0), fill: teal.lighten(80%), radius: 0.75, stroke: (dash: "dashed"))
+
+    line((1, 1), (0, 0))
+    line((1, 1), (2, 2), stroke: (dash: "dashed"))
+    circle((2, 2), fill: teal.lighten(80%), radius: 0.75, stroke: (dash: "dashed"))
+
+    line((-1, 1), (0, 0))
+    line((-1, 1), (-2, 2), stroke: (dash: "dashed"))
+    circle((-2, 2), fill: teal.lighten(80%), radius: 0.75, stroke: (dash: "dashed"))
+
+    circle((0, 0), fill: teal.lighten(80%), radius: 0.75)    
+  })
+
+  #set align(left)
+
+  In the #emph[PN-Network] a node only knows that it has some *ports*, each connected with a *different* node
+
+  #warning[Each node appears identical to any other]
+
+  We must break this symmetry
+]
+
+#slide(
+  title: [LOCAL Model]
+)[
+  #idea[We add unique identifiers to the model]
+
+  #set align(center)
+  $id : V -> NN$
+
+  $"where" forall v in V : id(v) <= |V|^c$
+
+  $"for some" c >= 1$
+
+  #set align(left)
+
+  #note[We choose $n^c$ so that we need $O(log n)$ bits to represent an identifier, i.e. identifiers are reasonably #emph[small]]
 ]
 
 /*
