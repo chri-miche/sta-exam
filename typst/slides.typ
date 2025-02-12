@@ -19,7 +19,7 @@
   inset: .5em,
   fill: orange.lighten(80%),
   radius: .5em,
-  text(size: .8em, grid(
+  text(grid(
     columns: (1fr, 10fr, 1fr),
     align(left, "🚨"),
     align(center, body),
@@ -32,7 +32,7 @@
   inset: .5em,
   fill: teal.lighten(80%),
   radius: .5em,
-  text(size: .8em, grid(
+  text(grid(
     columns: (1fr, 10fr, 1fr),
     align(left, "🎶"),
     align(center, body),
@@ -45,7 +45,7 @@
   inset: .5em,
   fill: yellow.lighten(60%),
   radius: .5em,
-  text(size: .8em, grid(
+  text(grid(
     columns: (1fr, 10fr, 1fr),
     align(left, "💡"),
     align(center, body),
@@ -53,9 +53,11 @@
   )),
 )
 
+// todo background
 // key concept
 #let key(body) = [🗝️ #body]
 
+// todo background
 #let def(body) = [#underline[#emph[_def_]] #body]
 
 #let today = datetime.today().display("[day]/[month]/[year]")
@@ -67,7 +69,10 @@
 #set text(font: (
   "Marianne",
   "Noto Color Emoji",
-))
+), size: 0.75em)
+
+#show raw: set text(size: 1.1em)
+#show smallcaps: set text(font: "EB Garamond SC 12")
 
 #title-slide(
   title: "Efficient Low Diameter Clustering",
@@ -105,10 +110,22 @@
   3. $v$ #emph[executes locally] some algorithm (same for each node)
   
   W.l.o.g. rounds are #emph[synchronized]
+]
+
+#slide(
+  title: [A First Example (`WAVE`)]
+)[
+  // TODO visualizzare 'wave'
+
+  In `WAVE` a single node starts "waving hello" to its neighbours that, in turn, "wave" to their neighbours
+
+  Each communication round can take a significant amount of time to happen
 
   #key[Complexity is measured in #emph[rounds]]
 
-  We say #emph[efficient] meaning $O("polylog" n)$, where $n = |V|$
+  The running time of this algorithm on a graph $G$ is $O(italic("diam")(G))$
+
+  We say #emph[efficient] meaning $O("polylog" n)$, where $n = |V|$ 
 ]
 
 #slide(
@@ -120,8 +137,6 @@
   Solving it in a centralized model is easily done with a greedy algorithm
 
   #def["*Centralized*" $equiv$ "*knowing the graph topology*"]
-
-  We aim to solve graph problems on networks
 
   #warning[From the perspective of a single node, we don't see the whole topology]
 ]
@@ -169,15 +184,57 @@
   #idea[We add unique identifiers to the model]
 
   #set align(center)
-  $id : V -> NN$
+  $italic(id) : V -> NN$
 
-  $"where" forall v in V : id(v) <= |V|^c$
-
-  $"for some" c >= 1$
+  $"where" forall v in V : italic(id)(v) <= n^c "for some" c >= 1$
 
   #set align(left)
 
   #note[We choose $n^c$ so that we need $O(log n)$ bits to represent an identifier, i.e. identifiers are reasonably #emph[small]]
+]
+
+#slide(
+  title: "Naive MIS",
+  new-section: "LOCAL Algorithms"
+)[
+  #algorithm({
+    import algorithmic: *
+    ast_to_content_list(1, {
+      Assign[$m$][$m || bot$]
+      If(cond: [$m =$ `selected`], {
+        Fn[stop][`result: 1`]
+      })
+      State[#smallcaps("send") $m$]
+      State[#smallcaps("receive") $italic("messages")$]
+      If(cond: [`selected` $in italic("messages")$], {
+        Fn[stop][`result: 0`]
+      })
+      If(cond: [`round` $ = italic(id)(v)$],
+        {
+          Assign[$m$][`selected`]
+        }
+      )
+    })
+  })
+
+  This algorithm runs in $O(n^c)$
+
+]
+
+#slide(
+  title: "Gathering All"
+)[
+  We can be way smarter than that
+
+  #idea[Running a centralized algorithm on a single node would take O(1) rounds]
+
+  The algorithm #smallcaps[Gather-All] makes all nodes build a local copy of the whole graph
+
+  It takes $O(italic("diam")(G))$
+
+  Then, we can run a deterministic centralized MIS algorithm on each node and output `1` if the node is in the computed MIS
+
+  Simple!
 ]
 
 /*
