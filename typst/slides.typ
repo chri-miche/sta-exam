@@ -113,11 +113,11 @@
 ]
 
 #slide(
-  title: [A First Example (`WAVE`)]
+  title: [A First Example (#smallcaps("Wave"))]
 )[
   // TODO visualizzare 'wave'
 
-  In `WAVE` a single node starts "waving hello" to its neighbours that, in turn, "wave" to their neighbours
+  In #smallcaps("Wave") a single node starts "waving hello" to its neighbours that, in turn, "wave" to their neighbours
 
   Each communication round can take a significant amount of time to happen
 
@@ -233,8 +233,44 @@
   It takes $O(italic("diam")(G))$
 
   Then, we can run a deterministic centralized MIS algorithm on each node and output `1` if the node is in the computed MIS
+]
 
-  Simple!
+#slide(
+  title: [The CONGEST model],
+  new-section: "CONGEST Algorithms"
+)[
+  // In real world scenario, we can't send messages on networks that are too big without incurring in performance penalties
+
+  We aim to bind the message sizes to a reasonably small limit
+
+  #key[In the CONGEST model, messages can only be in the size of $O(log n)$]
+
+  To send messages bigger than that, more rounds are needed
+
+  #emph[Examples:]
+  - Sending a single (or a constant amount of) identifier takes $O(1)$ rounds;
+  - Sending a _set_ of identifiers can take up to $O(n)$ rounds;
+
+  For this reason, we can't use #smallcaps[Gather-All] in the CONGEST model.
+]
+
+#slide(
+  title: [Network Decomposition]
+)[
+  There is an algorithm that solves MIS in $O(italic("diam")(G) log^2 n)$ in CONGEST @chps17
+
+  #warning[The diameter can be very large: \  we can only say that $italic("diam")(G) <= n$]
+
+  A #emph[Network Decomposition] divides a network in colored clusters, where clusters with the same color are not adjacent
+  - It has diameter $d$ if all of its clusters have diameter at almost $d$;
+  - It has $c$ colors.
+
+  #idea[We can run #smallcaps("MIS") @chps17 for each color, in parallel in its clusters \
+  and remove the neighbours of the newly added nodes]
+
+  This algorithm would have complexity $O(c dot d log^2 n)$
+
+  If $c = O(log n) = d$ then we would have a MIS algorithm in polylogarithmic time
 ]
 
 /*
@@ -283,6 +319,13 @@
   Hence we are interested in *#text(fill: unipd-red)[_(communication) rounds_]* complexity
 ]
 */
+
+#slide(
+  title: "Bibliography",
+  new-section: ""
+)[
+  #bibliography("works.bib")
+]
 
 #slide(
   title: "About this presentation",
