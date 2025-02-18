@@ -273,6 +273,62 @@
   If $c = O(log n) = d$ then we would have a MIS algorithm in polylogarithmic time
 ]
 
+#slide(
+  title: "How to compute one?",
+)[
+  // TODO low?
+  By definition, each color induces a #emph[low diameter clustering]
+
+  #idea[We can find a low diameter clustering, color them with a color, and repeat on uncolored nodes]
+
+  #note[To get a $O(log n)$ colored decomposition, each clustering has to cluster at least half of the nodes]
+]
+
+#slide(
+  title: "Definitions",
+  new-section: "Clusterings"
+)[
+  #def[A #emph[clustering] $cal(C) subset.eq 2^V$ is any set of #emph[disjoint subsets] of $V$]
+
+  #def[We say it has (strong) #emph[diameter] $d in NN$ when:
+  1. No two clusters are adjacent, i.e. $forall C_1, C_2 in cal(C) : italic("dist")_G (C_1, C_2) >= 2$;
+  #note[This means that a clustering _can not_ be a partitioning: some node has to be left out]
+  2. Each cluster has at most diameter $d$, i.e. $forall C in cal(C) italic("diam")_C (C) <= d$.
+  ]
+
+  #def[We say it has #emph[low] diameter instead when:
+  1. (unchanged);
+  2. Each cluster has at most diameter in $G$ $d$, i.e. $forall C in cal(C) italic("diam")_G (C) <= d]$.
+  ]
+]
+
+#slide(
+  title: [Previous works]
+)[
+  The state of the art before @rhg22 is @rg20 and @ehrg22
+  - TODO
+
+  The main accomplishment of @rhg22 is to provide an easier algorithm that still runs in polylogarithmic time
+]
+
+#slide(
+  title: [Outline],
+  new-section: "The Algorithm"
+)[
+  #emph[Objective:] Creating connected components with low diameters
+
+  #emph[Outline:]
+  - There are $b = O(log n)$ #emph[phases], each of one computes a set of #emph[terminals];;
+  // TODO forest definition all'inizio?
+  - We want to use terminals as root for trees.
+]
+
+#slide(
+  title: [Phase Outline]
+)[
+  #emph[Objective:] Creating forests from which is possible to build forests whose trees have polylogarithmic diameter
+]
+
 /*
 #slide(
   title: "The Communication Pitfall"
