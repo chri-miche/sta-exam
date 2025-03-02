@@ -69,7 +69,7 @@
 #set text(font: (
   "Marianne",
   "Noto Color Emoji",
-), size: 0.75em)
+), size: 30pt)
 
 #show raw: set text(size: 1.1em)
 #show smallcaps: set text(font: "EB Garamond SC 12")
@@ -318,15 +318,176 @@
   #emph[Objective:] Creating connected components with low diameters
 
   #emph[Outline:]
-  - There are $b = O(log n)$ #emph[phases], each of one computes a set of #emph[terminals];;
-  // TODO forest definition all'inizio?
-  - We want to use terminals as root for trees.
+  - There are $b = O(log n)$ #emph[phases], phase $i$ computes a set of #emph[terminals] $Q_i$;
+  - $Q_i$ is $R$-ruling, i.e. $italic("dist")_G (Q_i, v) <= R$ for all $v in V$.
+
+]
+
+#slide(title: [Outline])[
+  #emph[Objective:]
+  - Each phase removes some nodes: at most $frac(|V|, 2b)$;
+
+  #emph[Outline:]
+  - $V_i$ is the set of living nodes at the beginning of phase $i$;
+    - $V_0 = V$
+  - $V'$ is the set of living nodes after the last phase;
+    - $V' = V_b$
+]
+
+#slide(
+  title: [Outline]
+)[
+  #emph[Objective] (formalised):
+  - Each connected component of $G[V']$ contains exactly one terminal
+  - Moreover, it has polylogarithmic diameter
+]
+
+#slide(
+  title: [Invariants $forall i in [0..b]$]
+)[
+  1. $Q_i$ is $R_i$-ruling, i.e. $italic("dist")_G (Q_i, v) <= R_i$ for all $v in V$, with $R_i = i * O(log n)$
+    - $Q_0$ is $0$-ruling, trivially true since $Q_0 = V$;
+    - $Q_b$ is $O(log^3 n)$-ruling
+  
+  #idea[Each node has polylogarithmic distance from $Q_b$ $=>$ each connected component has at least one terminal]
+]
+
+#slide(
+  title: [Invariants $forall i in [0..b]$]
+)[
+  2. let $q_1, q_2 in Q_i$ s.t. they are in the same connected component in $G[V_i]$. Then $id(q_1)[0..i] = id(q_2)[0..i]$
+    - for $i = 0$ it's trivially true
+    - for $i = b$ there is $<= 1$ terminal in each c.c.
+  
+  #idea[Along with invariant (1.), it means that each c.c. has polylogarithmic diameter! ]
+]
+
+#slide(
+  title: [Invariants $forall i in [0..b]$]
+)[
+  3. $|V_i| >= (1 - frac(i, 2b)) |V|$
+    - $V_0 >= V$
+    - $V' >= frac(1, 2) |V|$
+  
+  #idea[The algorithm doesn't discard too much vertexes from the graph]
 ]
 
 #slide(
   title: [Phase Outline]
 )[
-  #emph[Objective:] Creating forests from which is possible to build forests whose trees have polylogarithmic diameter
+  #emph[Objective:] Keeping only terminals from which is possible to build forests whose trees have polylogarithmic diameter
+
+  #emph[Outline:]
+  - $2b^2$ #emph[steps], each computing a forest
+  - resulting into a sequence of forests $F_0 .. F_(2b^2)$
+]
+
+// per lavorare: apri con vscode il file (anche da fuori nix-shell)
+// poi apri il pdf con zathura
+// poi da una shell, entrare nella cartella
+//                 , lanciare nix-shell
+//                 , lanciare typst watch slides.typ 
+
+#slide(
+  title: [Step Outline]
+)[
+  #emph[Inductive definition]
+  - $F_0$ is a BFS forest with roots in $Q_i$
+  - let $T$ be any tree in $F_j$, and $r$ its root
+    - if $id(r)[i] = 0$ the whole tree is `red`, if not `blue`
+      - `red` vertexes stay `red`
+      - some `blue` nodes stay `blue`
+      - some others #emph[propose] to join `red` trees
+]
+
+#slide(
+  title: [Step Outline]
+)[
+  #emph[Proposal]
+
+  $v in V_j^italic("propose") <=> & v "is `blue`" \
+  and & v "is the only one in " italic("path")(v, italic("root")(v)) \ 
+  & "that neighbours a `red` node"$
+
+  Define $T_v$ the (`blue`) subtree rooted at $v$
+
+  #note[$v$ is the only node in $T_v$ that is also in $V_j^italic("propose")$]
+]
+
+#slide(
+  title: [Step Outline]
+)[
+  #emph[Proposal]
+
+  - Each node in $V_j^italic("propose")$ proposes to an arbitrary `red` neighbour
+  - Each `red` tree decides to grow or not
+    - If it grows, it accepts all proposing trees
+    - If not, all proposing subtrees are frozen
+  - #emph[Criteria:] it decides to grow if it would gain at least $frac(|V(T)|, 2b)$ nodes
+]
+
+#slide(
+  title: [Observations]
+)[
+  #note[If the `red` tree doesn't decide to grow, it will neighbour `red` nodes only]
+
+  - This means it will be able to delete nodes only once in the whole phase (i.e. after $2b^2$ steps)
+  - Hence at most $frac(|V|, 2b)$ nodes are lost in each phase
+  - After the $b$ phases at most $frac(|V|, 2)$ nodes are deleted
+]
+
+#slide(
+  title: [High Level Pseudocode]
+)[
+
+  #grid(
+    columns: (2fr, 1fr, 1fr, 1fr),
+    [
+      #set text(size: 24pt)
+      
+      #algorithm({
+        import algorithmic: *
+        ast_to_content_list(1, {
+          Assign[$V_0$][$V$]
+          Assign[$Q_0$][$V$]
+          For(cond: $i in 0..b-1$, {
+            State[#smallcaps("init") $F_0$]
+            For(cond: $j in 0..2b^2 - 1$, {
+              State[#smallcaps("build") $V_j^italic("propose")$]
+              Assign[$F_(j+1)$][#smallcaps("step")]
+            })
+            Assign[$V_(i+1)$][$V(F_(2b^2))$]
+            Assign[$Q_(i+1)$][$italic("roots")(F_(2b^2))$]
+          })
+        })
+      })
+    ],
+    [ 
+      #set text(size: 18pt)
+      $ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ #scale(x: -100%)[$cases("", "", "")$] O(log italic("diam")(T_v))$
+    ],
+    [
+      #set text(size: 18pt)
+      $ \ \ \ \ \ \ \ \ \ \ \ \ \  #scale(x: -100%)[$cases( "", "", "", "")$] 2b^2 = O(log^2 n)$
+    ],
+    [
+      #set text(size: 18pt)
+      $ \ \ \ \ \ \ \   #scale(x: -100%)[$cases("", "", "", "", "", "", "", "", "", "", "", "")$] b = O(log n)$
+    ]
+      
+  )
+]
+
+#slide(
+  title: [Step Complexity]
+)[
+
+  Recall invariant (1.): $forall v in V : italic("dist")_G (Q_i, v) = O(log^3 n)$, for all $i in 0..b$
+
+  Hence, $italic("diam")(T_v) = O(log^3 n)$, for all $v in V$
+
+  The algorithm runs in $O(log^6 n)$ communication steps
+  
 ]
 
 /*
