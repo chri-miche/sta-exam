@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <title>Distributed Algorithm Visualizer</title>
+
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <meta name="description" content="" />
+
+  <link rel="icon" href="favicon.png">
+
+  <link rel="stylesheet" href="style.css">
+
+  <script src="lodash-core.js"></script>
+
+  <script src="cytoscape.min.js"></script>
+
+  <script src="da-runtime.js"></script>
+</head>
+
+<body>
+
+  <header>
+
+    <h1>Hello, world!</h1>
+
+  </header>
+
+  <nav></nav>
+
+  <main>
+
+    <section>
+      <!-- TODO toolbox -->
+       <button onclick="main(wave_1, net)">
+        Run Wave!
+       </button>
+    </section>
+
+    <section></section>
+
+    <section id="cy"></section>
+
+  </main>
+
+  <footer></footer>
+
+  <script src="app.js"></script>
+
+</body>
+
+</html>
