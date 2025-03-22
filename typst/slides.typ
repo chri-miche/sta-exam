@@ -4,7 +4,7 @@
 #import "@preview/algorithmic:0.1.0"
 #import algorithmic: algorithm
 
-#let emph(body) = text(fill: unipd-red)[*#body*]
+#let emph(body) = text(fill: unipd-red,weight: "bold")[#body]
 
 #let example(body) = block(
   width: 100%,
@@ -69,7 +69,7 @@
 #set text(font: (
   "Marianne",
   "Noto Color Emoji",
-), size: 30pt)
+), weight: "light", size: 30pt)
 
 #show raw: set text(size: 1.1em)
 #show smallcaps: set text(font: "EB Garamond SC 12")

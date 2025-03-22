@@ -27,28 +27,35 @@
 
   <header>
 
-    <h1>Hello, world!</h1>
+    <h1>Distributed Algorithm Visualizer</h1>
 
   </header>
 
-  <nav></nav>
+  <nav>
+    <div>
+      <button onclick="main(wave_1, net)">
+        Run Wave!
+      </button>
+      <button onclick="main(naive_mis, net)">
+        Run Naive MIS!
+      </button>
+    </div>
+    <div>
+      <button class="warn" onclick="reset()">
+        Reset
+      </button>
+    </div>
+  </nav>
 
   <main>
-
-    <section>
-      <!-- TODO toolbox -->
-       <button onclick="main(wave_1, net)">
-        Run Wave!
-       </button>
-    </section>
-
-    <section></section>
 
     <section id="cy"></section>
 
   </main>
 
-  <footer></footer>
+  <footer>
+    Made with ❤️‍🔥 by chri-miche
+  </footer>
 
   <script src="app.js"></script>
 
