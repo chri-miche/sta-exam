@@ -4,7 +4,14 @@
 #import "@preview/algorithmic:0.1.0"
 #import algorithmic: algorithm
 
-#let emph(body) = text(fill: unipd-red,weight: "bold")[#body]
+#let oxford-blue= rgb("#002147");
+#let bluesnow   = rgb("#cce5ec");
+#let whitesnow  = rgb("#f1f2f6");
+#let ocra       = rgb("#d17a22");
+// no need for claret, use unipd-red instead #let claret     = rgb("#990d35");
+#let darkpurple = rgb("#28112b");
+
+#let emph(body) = text(fill: darkpurple,weight: "bold")[#body]
 
 #let example(body) = block(
   width: 100%,
@@ -17,7 +24,7 @@
 #let warning(body) = block(
   width: 100%,
   inset: .5em,
-  fill: orange.lighten(80%),
+  fill: orange.lighten(60%),
   radius: .5em,
   text(grid(
     columns: (1fr, 10fr, 1fr),
@@ -55,10 +62,23 @@
 
 // todo background
 // key concept
-#let key(body) = [🗝️ #body]
+#let key(body) = block(
+  width: 100%,
+  inset: .5em,
+  fill: bluesnow.lighten(60%),
+  radius: .5em,
+  text(grid(
+    columns: (1fr, 10fr, 1fr),
+    align(left, ""),
+    align(center, body),
+    align(right, "")
+  )),
+)
+
+#let formal-def(body) = underline[_#text(fill: unipd-red,weight: "bold")[#body]_]
 
 // todo background
-#let def(body) = [#underline[#emph[_def_]] #body]
+#let def(body) = [#formal-def[def] #body]
 
 #let today = datetime.today().display("[day]/[month]/[year]")
 
@@ -85,47 +105,49 @@
   title: "Distributed Algorithms",
   new-section: "Overview"
 )[
-  Many modern problems apply to #emph("networks of computers")
+  Some graph problems are interesting for #emph("networks of computers")
 
-  #idea($"Distribution" => "Parallelism"$)
+  #key[$"Distribution" => "Parallelism"$]
 
-  #emph("Idea:") we can leverage parallelism to speed up computations
-
-  #warning($"Distribution" => "Remoteness"$)
-
-  #emph[Bottleneck:] remote communication
-
-  Our aim is to study algorithms that execute in a distributed environment
+  #idea[We'd like to leverage parallelism to relieve computation costs]
 ]
 
 #slide(
-  title: "Complexity",
+  title: "Distributed Algorithms"
+)[
+  #warning($"Distribution" => "Collaboration"$)
+
+  Collaborating in a distributed environment requires #emph[exchanging messages]
+
+  On a [mezzo di trasporto, vettore] that is #emph[slow] and #emph[unreliable]...
+
+  //  Our aim is to study algorithms that execute in a distributed environment
+  $=>$ 
+  #key[Communication has the most impact on performances]
+
+  We will use it our measure unit of distributed algorithms complexity
+]
+
+#slide(
+  title: "Communication",
 )[
 
-  W.l.o.g.#footnote[Without loss of generality.] we adopt a model of execution divided in #emph[communication rounds]
+  W.l.o.g.#footnote[Without loss of generality.] we adopt a model of #emph[synchronous communication]
 
   Each round, a node $v in V$ performs this actions:
-  1. $v$ #emph[sends] messages to its neighbours;
+  1. $v$ #emph[sends] a message $italic("msg") in NN$ to its neighbours;
   2. $v$ #emph[receives] messages from its neighbours;
-  3. $v$ #emph[executes locally] some algorithm (same for each node)
-  
-  W.l.o.g. rounds are #emph[synchronized]
+  3. ...
 ]
 
 #slide(
-  title: [A First Example (#smallcaps("Wave"))]
+  title: "Communication",
 )[
-  // TODO visualizzare 'wave'
+  3. $v$ #emph[executes locally] some algorithm (same for each node).
+  
+  #def[Any message exchange establishes a communication #formal-def[round]]
 
-  In #smallcaps("Wave") a single node starts "waving hello" to its neighbours that, in turn, "wave" to their neighbours
-
-  Each communication round can take a significant amount of time to happen
-
-  #key[Complexity is measured in #emph[rounds]]
-
-  The running time of this algorithm on a graph $G$ is $O(italic("diam")(G))$
-
-  We say #emph[efficient] meaning $O("polylog" n)$, where $n = |V|$ 
+  #note[Point (3.) doesn't affect the algorithm's complexity]
 ]
 
 #slide(
@@ -136,7 +158,7 @@
 
   Solving it in a centralized model is easily done with a greedy algorithm
 
-  #def["*Centralized*" $equiv$ "*knowing the graph topology*"]
+  #def["#formal-def[Centralized]" $equiv$ "*knowing the graph topology*"]
 
   #warning[From the perspective of a single node, we don't see the whole topology]
 ]
@@ -194,8 +216,26 @@
 ]
 
 #slide(
-  title: "Naive MIS",
+  title: [A First Example (#smallcaps("Wave"))],
   new-section: "LOCAL Algorithms"
+)[
+  // TODO visualizzare 'wave'
+
+  In #smallcaps("Wave"), the node with $id(v) = 1$ _"waves hello"_ 
+  
+  When a node receives the message, forwards it to its neighbours
+
+  // Each communication round can take a significant amount of time to happen
+
+  // #key[Complexity is measured in #emph[rounds]]
+
+  The running time of this algorithm on a graph $G$ is $O(italic("diam")(G))$
+
+  #def["#formal-def[Efficient]" $equiv$ $O("polylog" n)$, with $n = |V|$]
+]
+
+#slide(
+  title: [A Second Example (#smallcaps("Naive MIS"))]
 )[
   #algorithm({
     import algorithmic: *
