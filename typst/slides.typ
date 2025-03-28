@@ -75,18 +75,32 @@
   )),
 )
 
+#let question(body) = block(
+  width: 100%,
+  inset: .5em,
+  fill: bluesnow.lighten(60%),
+  radius: .5em,
+  text(grid(
+    columns: (1fr, 10fr, 1fr),
+    align(left, "❓"),
+    align(center, body),
+    align(right, "")
+  )),
+)
+
 #let formal-def(body) = underline[_#text(fill: unipd-red,weight: "bold")[#body]_]
 
 // todo background
 #let def(body) = [#formal-def[def] #body]
 
-#let today = datetime.today().display("[day]/[month]/[year]")
+// #let today = datetime.today().display("[day]/[month]/[year]")
 
-#show: unipd-theme.with(author: "Christian Micheletti", date: today)
+#show: unipd-theme.with(author: "Christian Micheletti", date: "")
 #show math.equation: set text(font: "Fira Math")
 #show raw: set text(font: "Iosevka Extended")
 
 #set text(font: (
+  // "EB Garamond",
   "Marianne",
   "Noto Color Emoji",
 ), weight: "light", size: 30pt)
@@ -102,7 +116,7 @@
 // pannellone "What are we talking about?"
 
 #slide(
-  title: "Distributed Algorithms",
+  title: "Intuition",
   new-section: "Overview"
 )[
   Some graph problems are interesting for #emph("networks of computers")
@@ -113,62 +127,9 @@
 ]
 
 #slide(
-  title: "Distributed Algorithms"
-)[
-  #warning($"Distribution" => "Collaboration"$)
-
-  Collaborating in a distributed environment requires #emph[exchanging messages]
-
-  On a [mezzo di trasporto, vettore] that is #emph[slow] and #emph[unreliable]...
-
-  //  Our aim is to study algorithms that execute in a distributed environment
-  $=>$ 
-  #key[Communication has the most impact on performances]
-
-  We will use it our measure unit of distributed algorithms complexity
-]
-
-#slide(
-  title: "Communication",
-)[
-
-  W.l.o.g.#footnote[Without loss of generality.] we adopt a model of #emph[synchronous communication]
-
-  Each round, a node $v in V$ performs this actions:
-  1. $v$ #emph[sends] a message $italic("msg") in NN$ to its neighbours;
-  2. $v$ #emph[receives] messages from its neighbours;
-  3. ...
-]
-
-#slide(
-  title: "Communication",
-)[
-  3. $v$ #emph[executes locally] some algorithm (same for each node).
-  
-  #def[Any message exchange establishes a communication #formal-def[round]]
-
-  #note[Point (3.) doesn't affect the algorithm's complexity]
-]
-
-#slide(
-  title: "Centralized Graph Problems"
-)[
-
-  Example: #emph[Maximal Independent Set] (MIS)
-
-  Solving it in a centralized model is easily done with a greedy algorithm
-
-  #def["#formal-def[Centralized]" $equiv$ "*knowing the graph topology*"]
-
-  #warning[From the perspective of a single node, we don't see the whole topology]
-]
-
-#slide(
-  title: "PN-Network",
+  title: "A First Simple Model",
   new-section: "Models"
 )[
-
-  What can a node see?
 
   #set align(center)
   #cetz.canvas({
@@ -193,17 +154,75 @@
 
   #set align(left)
 
-  In the #emph[PN-Network] a node only knows that it has some *ports*, each connected with a *different* node
+  - In the *PN-Network* a node only knows some _Numbered *Ports*_
+   - Each connected with a *different* node
+   - #def[Those are called #formal-def[neighbours]]
+   - There are no *self loops*
 
-  #warning[Each node appears identical to any other]
+  #warning[From the perspective of a single node, we don't see the whole topology]
 
-  We must break this symmetry
+  // this is going to raise some problems, lets see which!
 ]
 
 #slide(
-  title: [LOCAL Model]
+  title: "Centralized Graph Problems"
 )[
-  #idea[We add unique identifiers to the model]
+
+  Example: *Maximal Independent Set* (MIS)
+
+  #set align(center)
+  #cetz.canvas({
+    import cetz.draw: *
+
+    set-style(stroke: (paint: red.darken(30%), thickness: 3pt, dash: "dashed"))
+    circle((-2, 2), fill: red.lighten(80%), radius: 1)   //
+    circle((4, 0), fill: red.lighten(80%), radius: 1)   //
+    circle((0, -2), fill: red.lighten(80%), radius: 1) //
+
+    set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+
+    line((-2, 2), (2, 2))
+    
+    line((-2, 2), (-3, -0.5))
+    line((-2, 2), (0, 0.25))
+
+    line((2, 2), (0, 0.25))
+    line((4, 0), (2, 2))
+
+    line((-3, -0.5), (0, -2))
+    line((0, 0.25), (0, -2))
+    line((4, 0), (2.75, -2))
+
+    line((0, -2), (2.75, -2))
+
+    circle((-2, 2), fill: teal.lighten(80%), radius: 0.75)   //
+    circle((2, 2), fill: teal.lighten(80%), radius: 0.75)
+    circle((-3, -0.5), fill: teal.lighten(80%), radius: 0.75)
+    circle((0, 0.25), fill: teal.lighten(80%), radius: 0.75) 
+    circle((4, 0), fill: teal.lighten(80%), radius: 0.75)   //
+    circle((0, -2), fill: teal.lighten(80%), radius: 0.75) //
+    circle((2.75, -2), fill: teal.lighten(80%), radius: 0.75)
+  })
+
+  #set align(left)
+
+  Solving it centralized is an easy greedy algorithm
+]
+
+#slide(title: "The PN-Network")[
+
+  #warning[Each node appears identical to any other]
+
+  - The only difference _could be_ in the number of ports
+    - Not enough!
+
+  - *We must break this symmetry*
+]
+
+#slide(
+  title: [The LOCAL Model]
+)[
+  #idea[We add *unique identifiers* to the nodes]
 
   #set align(center)
   $italic(id) : V -> NN$
@@ -212,16 +231,69 @@
 
   #set align(left)
 
-  #note[We choose $n^c$ so that we need $O(log n)$ bits to represent an identifier, i.e. identifiers are reasonably #emph[small]]
+  // we don't want to [limitare] the pool of indentifiers too much, but we want at least an upper bound
+
+  #note[We choose $n^c$ so that we need $O(log n)$ bits to represent an identifier, i.e. identifiers are reasonably #formal-def[small]]
+
+  // so this seems enough for the model
+  // but we need to define how communication works
+]
+
+#slide(
+  title: "Distributed Algorithms"
+)[
+  - This seems enough for the model
+  - We must now define:
+    - What *"distributed"* algorithms consist of
+    - And the criteria for *complexity* analysis
+]
+
+#slide(
+  title: "Distributed Algorithms"
+)[
+  #warning($"Distribution" => "Collaboration"$)
+
+  - Collaborating requires *exchanging messages*
+   - ...on a medium that is *slow* and *unreliable*
+
+  //  Our aim is to study algorithms that execute in a distributed environment
+  #key[$=>$ Communication has the most impact on complexity]
+
+  $=>$ We are intersted in *quantifying* the number of messages that travel across the network
+]
+
+#slide(
+  title: "Communication",
+)[
+
+  W.l.o.g.#footnote[Without loss of generality.] we adopt a model of #emph[synchronous communication]
+
+  // why? so that we can quantify easier the ceiling / "worst case" of the number of message sent in the network
+
+  Each round, a node $v in V$ performs this actions:
+  1. $v$ #emph[sends] a message $italic("msg") in NN$ to its neighbours;
+  2. $v$ #emph[receives] messages from its neighbours;
+  3. ...
+]
+
+#slide(
+  title: "Communication",
+)[
+  3. $v$ #emph[executes locally] some algorithm (same for each node).
+  
+  #def[Any message exchange establishes a communication #formal-def[round]]
+
+  #note[Point (3.) doesn't affect the algorithm's complexity]
+  // we are interested in capture the complexity that is upon the network
 ]
 
 #slide(
   title: [A First Example (#smallcaps("Wave"))],
   new-section: "LOCAL Algorithms"
 )[
-  // TODO visualizzare 'wave'
 
-  In #smallcaps("Wave"), the node with $id(v) = 1$ _"waves hello"_ 
+  In #smallcaps("Wave"), the node with $id(v) = 1$ _"waves hello"_
+  // doing stuff based on id is enough to break symmetry
   
   When a node receives the message, forwards it to its neighbours
 
@@ -230,34 +302,43 @@
   // #key[Complexity is measured in #emph[rounds]]
 
   The running time of this algorithm on a graph $G$ is $O(italic("diam")(G))$
-
-  #def["#formal-def[Efficient]" $equiv$ $O("polylog" n)$, with $n = |V|$]
 ]
 
 #slide(
   title: [A Second Example (#smallcaps("Naive MIS"))]
 )[
+  #idea[Let's leverage $id$ to select the first MIS node]
+  
+  - At round \#$i$, node $v : id(v) = i$ executes
+    - If no neighbour is in the MIS, add the node
+      - And inform the neighbours
+    - Otherwise, the node is outside the MIS
+
   #algorithm({
     import algorithmic: *
     ast_to_content_list(1, {
-      Assign[$m$][$m || bot$]
-      If(cond: [$m =$ `selected`], {
-        Fn[stop][`result: 1`]
-      })
+      
+      If(cond: [`round` $ = italic(id)(v)$],
+        {
+          Assign[$m$][`'want-to-select'`]
+        }
+      )
       State[#smallcaps("send") $m$]
       State[#smallcaps("receive") $italic("messages")$]
-      If(cond: [`selected` $in italic("messages")$], {
-        Fn[stop][`result: 0`]
+      If(cond: [`'want-to-select'` $in italic("messages")$], {
+        Fn[stop][`result: 'not-in-MIS'`]
       })
       If(cond: [`round` $ = italic(id)(v)$],
         {
-          Assign[$m$][`selected`]
+        Fn[stop][`result: 'in-MIS'`]
         }
       )
     })
   })
 
-  This algorithm runs in $O(n^c)$
+  - It is correct since no node has the same $id$
+  - This algorithm runs in $O(n^c)$ (the maximum $id$)
+    - *Very bad*
 
 ]
 
@@ -267,12 +348,109 @@
   We can be way smarter than that
 
   #idea[Running a centralized algorithm on a single node would take O(1) rounds]
+  // minimizes number of messages in the net
 
-  The algorithm #smallcaps[Gather-All] makes all nodes build a local copy of the whole graph
+  - We'd like to run a MIS algorithm on each node
+    - *Centralized* $=>$ each node must have a *local copy* of the *entire* graph
 
-  It takes $O(italic("diam")(G))$
+  - The algorithm #smallcaps[Gather-All] makes all nodes build a local copy of the whole graph
+    - At round $i$, each node $v$ knows $italic("ball")(i, v)$
 
-  Then, we can run a deterministic centralized MIS algorithm on each node and output `1` if the node is in the computed MIS
+
+  
+  #let left-content = [
+    #set align(center)
+
+    #set text(fill: ocra.darken(30%), size: 24pt)
+    $italic("ball")(0, v)$
+    #scale(75%)[
+    #cetz.canvas({
+      import cetz.draw: *
+
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+
+      line((-2, 2), (2, 2))
+      
+      line((-2, 2), (-3, -0.5))
+      line((-2, 2), (0, 0.25))
+
+      line((2, 2), (0, 0.25))
+      line((4, 0), (2, 2))
+
+      line((-3, -0.5), (0, -2))
+      line((0, 0.25), (0, -2))
+      line((4, 0), (2.75, -2))
+
+      line((0, -2), (2.75, -2))
+
+
+
+      set-style(stroke: (paint: ocra.darken(30%), thickness: 3pt, dash: none))
+      circle((-2, 2), fill: ocra.lighten(80%), radius: 0.75)   //
+
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+      circle((2, 2), fill: teal.lighten(80%), radius: 0.75)
+      circle((-3, -0.5), fill: teal.lighten(80%), radius: 0.75)
+      circle((0, 0.25), fill: teal.lighten(80%), radius: 0.75) 
+      circle((4, 0), fill: teal.lighten(80%), radius: 0.75)   //
+      circle((0, -2), fill: teal.lighten(80%), radius: 0.75) //
+      circle((2.75, -2), fill: teal.lighten(80%), radius: 0.75)
+    })]
+  ]
+  #let right-content = [
+    #set align(center)
+
+    #set text(fill: ocra.darken(30%), size: 24pt)
+    $italic("ball")(1, v)$
+
+    #scale(75%)[
+    #cetz.canvas({
+      import cetz.draw: *
+
+      set-style(stroke: (paint: ocra.darken(30%), thickness: 3pt, dash: none))
+      // circle((-2, 2), fill: green.lighten(80%), radius: 1)   //
+
+
+      line((-2, 2), (2, 2))
+      
+      line((-2, 2), (-3, -0.5))
+      line((-2, 2), (0, 0.25))
+
+      line((2, 2), (0, 0.25))
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+
+      line((4, 0), (2, 2))
+
+      line((-3, -0.5), (0, -2))
+      line((0, 0.25), (0, -2))
+      line((4, 0), (2.75, -2))
+
+      line((0, -2), (2.75, -2))
+
+      set-style(stroke: (paint: ocra.darken(30%), thickness: 3pt, dash: none))
+      circle((-2, 2), fill: ocra.lighten(80%), radius: 0.75)   //
+      circle((2, 2), fill: ocra.lighten(80%), radius: 0.75)
+      circle((-3, -0.5), fill: ocra.lighten(80%), radius: 0.75)
+      circle((0, 0.25), fill: ocra.lighten(80%), radius: 0.75) 
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+      circle((4, 0), fill: teal.lighten(80%), radius: 0.75)   //
+      circle((0, -2), fill: teal.lighten(80%), radius: 0.75) //
+      circle((2.75, -2), fill: teal.lighten(80%), radius: 0.75)
+    })]
+  ]
+
+  #side-by-side(left-content, right-content)
+
+  - All nodes will know the whole graph after $O(italic("diam")(G))$ rounds
+]
+
+#slide(
+  title: [Critique to LOCAL]
+)[
+  #warning[Graph can be really large]
+  - In a real world setting, it is not always possible to send arbitrary large messages
+  - We'd like to lift this assumption
+    - Messages need to be reasonably #formal-def[small]
 ]
 
 #slide(
@@ -281,27 +459,28 @@
 )[
   // In real world scenario, we can't send messages on networks that are too big without incurring in performance penalties
 
-  We aim to bind the message sizes to a reasonably small limit
+  - We provide an upper bound on messages size
+    - Messages larger than will require more rounds to be fully sent
 
   #key[In the CONGEST model, messages can only be in the size of $O(log n)$]
 
-  To send messages bigger than that, more rounds are needed
-
   #emph[Examples:]
-  - Sending a single (or a constant amount of) identifier takes $O(1)$ rounds;
-  - Sending a _set_ of identifiers can take up to $O(n)$ rounds;
+  - Sending a single (or a constant amount of) identifier takes $O(1)$ rounds
+  - Sending a _set_ of identifiers can take up to $O(n)$
+  - Sending the whole graph requires $O(n^2)$ rounds:
+    - The adjacency matrix alone reaches that
 
-  For this reason, we can't use #smallcaps[Gather-All] in the CONGEST model.
+  #key[$=>$ We can't use #smallcaps[Gather-All] in the CONGEST model]
 ]
 
 #slide(
   title: [Network Decomposition]
 )[
-  There is an algorithm that solves MIS in $O(italic("diam")(G) log^2 n)$ in CONGEST @chps17
+  - Censor-Hillel et al. provided an algorithm that solves MIS in $O(italic("diam")(G) log^2 n)$ in CONGEST @chps17
 
   #warning[The diameter can be very large: \  we can only say that $italic("diam")(G) <= n$]
 
-  A #emph[Network Decomposition] divides a network in colored clusters, where clusters with the same color are not adjacent
+  - A *Network Decomposition* divides a network in colored clusters, where clusters with the same color are not adjacent
   - It has diameter $d$ if all of its clusters have diameter at almost $d$;
   - It has $c$ colors.
 
