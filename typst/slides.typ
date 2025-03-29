@@ -91,7 +91,7 @@
 #let formal-def(body) = underline[_#text(fill: unipd-red,weight: "bold")[#body]_]
 
 // todo background
-#let def(body) = [#formal-def[def] #body]
+#let def(body) = [#formal-def[def:] #body]
 
 // #let today = datetime.today().display("[day]/[month]/[year]")
 
@@ -474,31 +474,52 @@
 ]
 
 #slide(
-  title: [Network Decomposition]
+  title: "MIS in CONGEST"
 )[
   - Censor-Hillel et al. provided an algorithm that solves MIS in $O(italic("diam")(G) log^2 n)$ in CONGEST @chps17
 
-  #warning[The diameter can be very large: \  we can only say that $italic("diam")(G) <= n$]
+  #warning[The diameter can be very large \ Worst case: $italic("diam")(G) = n$]
+]
 
-  - A *Network Decomposition* divides a network in colored clusters, where clusters with the same color are not adjacent
-  - It has diameter $d$ if all of its clusters have diameter at almost $d$;
-  - It has $c$ colors.
+#slide(
+  title: [Network Decomposition]
+)[
 
-  #idea[We can run #smallcaps("MIS") @chps17 for each color, in parallel in its clusters \
-  and remove the neighbours of the newly added nodes]
+  - A #formal-def[Network Decomposition] groups nodes in *colored clusters*
+    - Clusters with the same color are not adjacent
+    - We say it to #formal-def["have diameter"] $d$ if all of its clusters have diameter at most $d$
+    - It has $c$ colors
 
-  This algorithm would have complexity $O(c dot d log^2 n)$
+  // TODO IMMAGINE
 
-  If $c = O(log n) = d$ then we would have a MIS algorithm in polylogarithmic time
+]
+
+#slide(
+  title: [How to use it?]
+)[
+  #idea[Solving MIS in a color will give a correct partial solution]
+
+  - We can iterate this action with @chps17 for all colors
+    - (dropping neighbours of different colors)
+
+  - This algorithm has complexity $O(c dot d log^2 n)$
+    - If $c = O(log n) = d$ then we would have a MIS algorithm in polylogarithmic time
 ]
 
 #slide(
   title: "How to compute one?",
 )[
   // TODO low?
-  By definition, each color induces a #emph[low diameter clustering]
+  - By definition, each color induces a *low diameter clustering*
 
-  #idea[We can find a low diameter clustering, color them with a color, and repeat on uncolored nodes]
+  #def[A #formal-def[low diameter clustering] for a graph $G$ $cal("C") $ diameter $d$ is such:]
+  - $forall C_1 != C_2 in cal("C") : italic("dist")_G (C_1, C_2) >= 2$
+    - #emph["There are no adjacent clusters"]
+  - $forall C in cal("C") : italic("diam")(G[C]) <= d$
+    - #emph["Any cluster has diameter at most"] $d$
+
+
+  #idea[We can find a low diameter clustering, color them, and repeat on uncolored nodes] 
 
   #note[To get a $O(log n)$ colored decomposition, each clustering has to cluster at least half of the nodes]
 ]
