@@ -61,7 +61,7 @@
   )),
 )
 
-// todo background
+// todo background magari giallo..?
 // key concept
 #let key(body) = block(
   width: 100%,
@@ -91,7 +91,7 @@
 
 #let formal-def(body) = underline[_#text(fill: unipd-red,weight: "bold")[#body]_]
 
-#let faded(body) = text(fill: rgb("#aaa9a9"), weight: "bold")[#body]
+#let faded(body) = text(fill: rgb("#c9c9c9"), weight: "bold")[#body]
 
 // todo background
 #let def(body) = [#formal-def[def:] #body]
@@ -539,93 +539,118 @@
 )[
   - Our previous definition of diamter is also called #formal-def[strong] diameter
   
-  #def[We say a clustering has #formal-def[weak] diameter when:
+  #def[We say a clustering has #formal-def[weak] diameter when]:
   1. (unchanged) #faded["There are no adjacent clusters"];
-  2. Each cluster has at most diameter in $G$ $d$, i.e. $forall C in cal(C) italic("diam")_G (C) <= d]$.
-  ]
+  2.  "Any cluster has diameter #emph[in $G$] at most" $d$
 
 ]
 
 #slide(
-  title: [Previous works]
+  title: [Introduction],
+  new-section: "The Algorithm"
 )[
-  We now want to present @rhg22
+  - The main accomplishment of @rhg22 is to provide a straightforward algorithm that:
+    - Terminates in $O(log^6 n)$ rounds in the CONGEST model
+    - Outputs a clustering with $O(log^3 n)$ colors
+    - The clustering has strong diameter
+
   - Previously @rg20 provided an algorithm for low diameter clustering with #emph[weak] diameter
     - $O(log^7 n)$ rounds with $O(log^3 n)$ colors
     - It's possible to turn it into strong diameter
   
-  - @ehrg22 provides trong diameter in $O(log^4 n)$ rounds with $O(log^3 n)$ colors
-    - Still has to turn weak diameter into strong diameter
-
-  - The main accomplishment of @rhg22 is to provide a straightforward algorithm
-    - $O(log^6 n)$
+  - @ehrg22 provided strong diameter in $O(log^4 n)$ rounds with $O(log^3 n)$ colors
+    - Still has to pass by a weak diameter intermediate solution
 ]
 
 #slide(
-  title: [Outline],
-  new-section: "The Algorithm"
+  title: [Algorithm Outline]
 )[
-  #emph[Objective:] Creating connected components with low diameters
+  #emph[Phases]
+  - There are $b = log (max i) = O(log n)$ #emph[phases]
+  - "One phase for each bit in index"
+    - Phase $i in [0, b - 1]$ computes "_#emph[terminals] set_" $Q_i$
 
-  #emph[Outline:]
-  - There are $b = O(log n)$ #emph[phases], phase $i$ computes a set of #emph[terminals] $Q_i$;
-  - $Q_i$ is $R$-ruling, i.e. $italic("dist")_G (Q_i, v) <= R$ for all $v in V$.
+  #emph[Notation]
+  - $Q_i$ is the terminals set built _before_ phase $i$
+  - $Q_b$ is the terminals set built _after_ phase $b-1$
 
 ]
 
-#slide(title: [Outline])[
-  #emph[Objective:]
-  - Each phase removes some nodes: at most $frac(|V|, 2b)$;
+// TODO terminal definition?
 
-  #emph[Outline:]
-  - $V_i$ is the set of living nodes at the beginning of phase $i$;
-    - $V_0 = V$
-  - $V'$ is the set of living nodes after the last phase;
+#slide(
+  title: [Algorithm Outline (informal)],
+  new-section: "The Algorithm"
+)[
+  // TODO ripassa cos'è un connected component
+  #emph[Objective 1:] Creating *connected components* with low diameters
+  - Eventually, each connected component will contain exactly one terminal
+    - Keep terminals #formal-def[close] to active nodes
+      - This ensures polylogarithmic diameter
+      - Removing nodes is allowed
+
+  - $Q_(i+1)$ is "_closer_" than $Q_i$ to any node
+    - $Q_b$ is #formal-def[close] to any node
+
+// TODO valutare un colore per efficient, close, small...
+
+// TODO nomenclatura nodi: living vs dead / active vs inactive ... scegliere e usare unificata
+]
+
+#slide(title: [Algorithm Outline (informal)])[
+  #emph[Objective 2:]
+  - The algorithm must cluster at least $n/2$ nodes
+    - Each phase *removes* at most $n/(2b)$ nodes
+]
+
+#slide(
+  title: [Algorithm Outline]
+)[
+  #emph[Further notation:]
+  - $V_i$ is the set of *living nodes* at the beginning of phase $i$ ($V_0 = V$)
+  - $V'$ is the set of *living nodes* after the last phase;
     - $V' = V_b$
 ]
 
 #slide(
-  title: [Outline]
+  title: [Phase Invariants $forall i in [0..b]$]
 )[
-  #emph[Objective] (formalised):
-  - Each connected component of $G[V']$ contains exactly one terminal
-  - Moreover, it has polylogarithmic diameter
-]
-
-#slide(
-  title: [Invariants $forall i in [0..b]$]
-)[
-  1. $Q_i$ is $R_i$-ruling, i.e. $italic("dist")_G (Q_i, v) <= R_i$ for all $v in V$, with $R_i = i * O(log n)$
-    - $Q_0$ is $0$-ruling, trivially true since $Q_0 = V$;
+  1. $Q_i$ is $R_i$-ruling, i.e. $italic("dist")_G (Q_i, v) <= R_i$ for all $v in V$
+    - We set $R_i = i * O(log^2 n)$
+    - $Q_0$ is $0$-ruling, trivially true with $Q_0 = V$
+    // "all nodes are terminals at the beginning"
     - $Q_b$ is $O(log^3 n)$-ruling
   
-  #idea[Each node has polylogarithmic distance from $Q_b$ $=>$ each connected component has at least one terminal]
+  #key[Each node has polylogarithmic distance from $Q_b$ $=>$ each connected component has #emph[at least one] terminal]
+  // if not, some nodes would have infinite distance
 ]
 
 #slide(
-  title: [Invariants $forall i in [0..b]$]
+  title: [Phase Invariants $forall i in [0..b]$]
 )[
   2. let $q_1, q_2 in Q_i$ s.t. they are in the same connected component in $G[V_i]$. Then $id(q_1)[0..i] = id(q_2)[0..i]$
     - for $i = 0$ it's trivially true
     - for $i = b$ there is $<= 1$ terminal in each c.c.
   
-  #idea[Along with invariant (1.), it means that each c.c. has polylogarithmic diameter! ]
+  #key[Along with invariant (1.), it means that each c.c. has polylogarithmic diameter! ]
 ]
 
 #slide(
-  title: [Invariants $forall i in [0..b]$]
+  title: [Phase Invariants $forall i in [0..b]$]
 )[
   3. $|V_i| >= (1 - frac(i, 2b)) |V|$
     - $V_0 >= V$
     - $V' >= frac(1, 2) |V|$
   
-  #idea[The algorithm doesn't discard too much vertexes from the graph]
+  "The algorithm doesn't discard too much vertexes from the graph"
 ]
 
 #slide(
   title: [Phase Outline]
 )[
-  #emph[Objective:] Keeping only terminals from which is possible to build forests whose trees have polylogarithmic diameter
+  #emph[Objective:] Keeping only terminals from which is possible to build a *forest* whose *trees* have polylogarithmic diameter
+  - Leaves of the trees may be connected in $G$
+  // TODO immagine
 
   #emph[Outline:]
   - $2b^2$ #emph[steps], each computing a forest
@@ -641,9 +666,9 @@
 #slide(
   title: [Step Outline]
 )[
-  #emph[Inductive definition]
+  #emph[Inductive definition:]
   - $F_0$ is a BFS forest with roots in $Q_i$
-  - let $T$ be any tree in $F_j$, and $r$ its root
+  - let $T$ be any tree in $F_j$ and $r$ its root
     - if $id(r)[i] = 0$ the whole tree is `red`, if not `blue`
       - `red` vertexes stay `red`
       - some `blue` nodes stay `blue`
@@ -653,7 +678,7 @@
 #slide(
   title: [Step Outline]
 )[
-  #emph[Proposal]
+  #emph[Proposal:]
 
   $v in V_j^italic("propose") <=> & v "is `blue`" \
   and & v "is the only one in " italic("path")(v, italic("root")(v)) \ 
@@ -667,7 +692,7 @@
 #slide(
   title: [Step Outline]
 )[
-  #emph[Proposal]
+  #emph[Proposal:]
 
   - Each node in $V_j^italic("propose")$ proposes to an arbitrary `red` neighbour
   - Each `red` tree decides to grow or not
@@ -681,9 +706,12 @@
 )[
   #note[If the `red` tree doesn't decide to grow, it will neighbour `red` nodes only]
 
-  - This means it will be able to delete nodes only once in the whole phase (i.e. after $2b^2$ steps)
-  - Hence at most $frac(|V|, 2b)$ nodes are lost in each phase
-  - After the $b$ phases at most $frac(|V|, 2)$ nodes are deleted
+  - This means it will be able to delete nodes only once in the whole phase // (i.e. among all $2b^2$ steps)
+    #list(
+      marker: [$=>$],
+      [At most $frac(|V|, 2b)$ nodes are lost in each phase],
+      [After the $b$ phases at most $frac(|V|, 2)$ nodes are removed]
+    )
 ]
 
 #slide(
@@ -714,7 +742,7 @@
     ],
     [ 
       #set text(size: 18pt)
-      $ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ #scale(x: -100%)[$cases("", "", "")$] O(log italic("diam")(T_v))$
+      $ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ #scale(x: -100%)[$cases("", "", "")$] O(italic("diam")(T_v))$
     ],
     [
       #set text(size: 18pt)
@@ -732,10 +760,12 @@
   title: [Step Complexity]
 )[
 
-  Recall invariant (1.): $forall v in V : italic("dist")_G (Q_i, v) = O(log^3 n)$, for all $i in 0..b$
+  - Recall invariant (1.)
+    - $forall v in V : italic("dist")_G (Q_i, v) = O(log^3 n)$, for all $i in 0..b$
+    - Hence, $italic("diam")(T_v) = O(log^3 n)$, for all $v in V$
 
-  Hence, $italic("diam")(T_v) = O(log^3 n)$, for all $v in V$
-
+  - Complexity is $italic("#steps") times italic("#phases") times O(italic("diam")(T_v))$
+    - $= O(log n) times O(log^2 n) times O(log^3 n)$
   The algorithm runs in $O(log^6 n)$ communication steps
   
 ]
