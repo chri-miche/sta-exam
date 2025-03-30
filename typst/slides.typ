@@ -11,7 +11,8 @@
 // no need for claret, use unipd-red instead #let claret     = rgb("#990d35");
 #let darkpurple = rgb("#28112b");
 
-#let emph(body) = text(fill: darkpurple,weight: "bold")[#body]
+// TODO emph darkpurple in notes and ocra in ideas
+#let emph(body) = text(fill: ocra.darken(30%),weight: "bold")[#body]
 
 #let example(body) = block(
   width: 100%,
@@ -89,6 +90,8 @@
 )
 
 #let formal-def(body) = underline[_#text(fill: unipd-red,weight: "bold")[#body]_]
+
+#let faded(body) = text(fill: rgb("#aaa9a9"), weight: "bold")[#body]
 
 // todo background
 #let def(body) = [#formal-def[def:] #body]
@@ -510,45 +513,52 @@
   title: "How to compute one?",
 )[
   // TODO low?
-  - By definition, each color induces a *low diameter clustering*
+  - Each color induces a *low diameter clustering*
 
-  #def[A #formal-def[low diameter clustering] for a graph $G$ $cal("C") $ diameter $d$ is such:]
-  - $forall C_1 != C_2 in cal("C") : italic("dist")_G (C_1, C_2) >= 2$
+  #def[A #formal-def[low diameter clustering] $cal("C") subset.eq 2^V$ for a graph $G$ with diameter $d$ is such:]
+  1. $forall C_1 != C_2 in cal("C") : italic("dist")_G (C_1, C_2) >= 2$
     - #emph["There are no adjacent clusters"]
-  - $forall C in cal("C") : italic("diam")(G[C]) <= d$
+  2. $forall C in cal("C") : italic("diam")(G[C]) <= d$
     - #emph["Any cluster has diameter at most"] $d$
 
+  #idea[A clustering #emph[can not be a partitioning]: some nodes have to be left out]
 
-  #idea[We can find a low diameter clustering, color them, and repeat on uncolored nodes] 
+  Main iteration:
+    1. Find a low diameter clustering
+    2. Assign a free color to its nodes
+    3. Repeat to discarded nodes until there are no more left
 
-  #note[To get a $O(log n)$ colored decomposition, each clustering has to cluster at least half of the nodes]
+  #note[To get a $O(log n)$-colors decomposition, each color has to cluster *at least half* of the uncolored nodes]
+
+  // TODO proof?
 ]
 
 #slide(
   title: "Definitions",
   new-section: "Clusterings"
 )[
-  #def[A #emph[clustering] $cal(C) subset.eq 2^V$ is any set of #emph[disjoint subsets] of $V$]
-
-  #def[We say it has (strong) #emph[diameter] $d in NN$ when:
-  1. No two clusters are adjacent, i.e. $forall C_1, C_2 in cal(C) : italic("dist")_G (C_1, C_2) >= 2$;
-  #note[This means that a clustering _can not_ be a partitioning: some node has to be left out]
-  2. Each cluster has at most diameter $d$, i.e. $forall C in cal(C) italic("diam")_C (C) <= d$.
-  ]
-
-  #def[We say it has #emph[low] diameter instead when:
-  1. (unchanged);
+  - Our previous definition of diamter is also called #formal-def[strong] diameter
+  
+  #def[We say a clustering has #formal-def[weak] diameter when:
+  1. (unchanged) #faded["There are no adjacent clusters"];
   2. Each cluster has at most diameter in $G$ $d$, i.e. $forall C in cal(C) italic("diam")_G (C) <= d]$.
   ]
+
 ]
 
 #slide(
   title: [Previous works]
 )[
-  The state of the art before @rhg22 is @rg20 and @ehrg22
-  - TODO
+  We now want to present @rhg22
+  - Previously @rg20 provided an algorithm for low diameter clustering with #emph[weak] diameter
+    - $O(log^7 n)$ rounds with $O(log^3 n)$ colors
+    - It's possible to turn it into strong diameter
+  
+  - @ehrg22 provides trong diameter in $O(log^4 n)$ rounds with $O(log^3 n)$ colors
+    - Still has to turn weak diameter into strong diameter
 
-  The main accomplishment of @rhg22 is to provide an easier algorithm that still runs in polylogarithmic time
+  - The main accomplishment of @rhg22 is to provide a straightforward algorithm
+    - $O(log^6 n)$
 ]
 
 #slide(
