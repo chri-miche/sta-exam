@@ -104,7 +104,7 @@
         x: 0.4em,
         y: 0.2em,
         grid(
-          columns: (50%, 35%, 15%),
+          columns: (50%, 34%, 1%, 15%),
           align(horizon + left, title),
           if (hide-section) {
             box()
@@ -114,6 +114,7 @@
               utils.current-section,
             ))
           },
+          box(),// fast margin
           align(top + right, image("images/logo_white.svg")),
         ),
       )

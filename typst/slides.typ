@@ -119,19 +119,26 @@
 // pannellone "What are we talking about?"
 
 #slide(
+  title: [About This Presentation]
+)[
+  #polylux-outline(padding: 0.5em, enum-args: (tight: false))
+]
+
+#slide(
   title: "Intuition",
-  new-section: "Overview"
+  new-section: "Models"
 )[
   Some graph problems are interesting for #emph("networks of computers")
 
   #key[$"Distribution" => "Parallelism"$]
+  
+  #pause
 
   #idea[We'd like to leverage parallelism to relieve computation costs]
 ]
 
 #slide(
-  title: "A First Simple Model",
-  new-section: "Models"
+  title: "A First Simple Model"
 )[
 
   #set align(center)
@@ -291,8 +298,7 @@
 ]
 
 #slide(
-  title: [A First Example (#smallcaps("Wave"))],
-  new-section: "LOCAL Algorithms"
+  title: [A First Example (#smallcaps("Wave"))]
 )[
 
   In #smallcaps("Wave"), the node with $id(v) = 1$ _"waves hello"_
@@ -457,8 +463,7 @@
 ]
 
 #slide(
-  title: [The CONGEST model],
-  new-section: "CONGEST Algorithms"
+  title: [The CONGEST model]
 )[
   // In real world scenario, we can't send messages on networks that are too big without incurring in performance penalties
 
@@ -477,7 +482,8 @@
 ]
 
 #slide(
-  title: "MIS in CONGEST"
+  title: "MIS in CONGEST",
+  new-section: [Network Decomposition]
 )[
   - Censor-Hillel et al. provided an algorithm that solves MIS in $O(italic("diam")(G) log^2 n)$ in CONGEST @chps17
 
@@ -534,8 +540,7 @@
 ]
 
 #slide(
-  title: "Definitions",
-  new-section: "Clusterings"
+  title: "Definitions"
 )[
   - Our previous definition of diamter is also called #formal-def[strong] diameter
   
@@ -547,7 +552,7 @@
 
 #slide(
   title: [Introduction],
-  new-section: "The Algorithm"
+  new-section: "Computing a Clustering"
 )[
   - The main accomplishment of @rhg22 is to provide a straightforward algorithm that:
     - Terminates in $O(log^6 n)$ rounds in the CONGEST model
@@ -579,8 +584,7 @@
 // TODO terminal definition?
 
 #slide(
-  title: [Algorithm Outline (informal)],
-  new-section: "The Algorithm"
+  title: [Algorithm Outline (informal)]
 )[
   // TODO ripassa cos'è un connected component
   #emph[Objective 1:] Creating *connected components* with low diameters
@@ -770,6 +774,48 @@
   
 ]
 
+#slide(
+  title: [Recap]
+)[
+  - We've seen how to build a *low diameter clustering* ($O(log^6 n)$)
+    - It clusters at least $n/2$ nodes
+  - We can apply that until all nodes have a color
+    - $O(log n)$ steps and therefore $O(log n)$ colors
+  - For each color, we solve MIS @chps17
+    - In parallel in the clusters ($O(log^3 n times log^2 n)$)
+  #list(
+    marker: [$=>$],
+    [We end up solving MIS in $O(log^6 n)$ rounds]
+  )
+]
+/* 
+#slide(
+  title: [Recap]
+)[
+  #grid(columns: (15fr, 8fr), gutter: 0.25em, 
+  [
+  - We've seen how to build a *low diameter clustering*
+    - It clusters at least $n/2$ nodes
+  - We can apply that until all nodes have a color
+    - $O(log n)$ colors
+  - For each color, we solve MIS @chps17
+    - In parallel in the clusters
+  #list(
+    marker: [$=>$],
+    [We end up solving MIS in $O(log^6 n)$ rounds]
+  )
+  ], [
+    $O(log^6 n)$
+
+    \ \ 
+    $+$ $O(log n)$
+    \ \
+    $+$ ($O(log n) times$
+
+    $O(log^3 n times log^2 n)$)
+  ])
+] */
+
 /*
 #slide(
   title: "The Communication Pitfall"
@@ -818,8 +864,7 @@
 */
 
 #slide(
-  title: "Bibliography",
-  new-section: ""
+  title: "Bibliography"
 )[
   #bibliography("works.bib")
 ]
