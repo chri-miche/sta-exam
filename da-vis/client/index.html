@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="style.css">
 
   <script src="lodash-core.js"></script>
+  <script src="rxjs.umd.min.js"></script>
 
   <script src="cytoscape.min.js"></script>
 
@@ -33,23 +34,49 @@
 
   <nav>
     <div>
-      <button onclick="main(wave_1, net)">
-        Run Wave!
+      <button class="selected" onclick="selectNet(net_1, this)">
+        Net 1
       </button>
-      <button onclick="main(naive_mis, net)">
-        Run Naive MIS!
+      <button onclick="selectNet(ring_net, this)">
+        Ring net
       </button>
     </div>
     <div>
-      <button class="warn" onclick="reset()">
-        Reset
-      </button>
+      <p id="display-rounds">
+        
+      </p>
+    </div>
+    <div>
     </div>
   </nav>
 
   <main>
 
+    <!-- algorithm selection -->
+    <section>
+      <h3>Run algorithm</h3>
+      <button onclick="main(wave_1)">
+        Wave
+      </button>
+      <button onclick="main(naive_mis)">
+        Naive MIS
+      </button>
+    </section>
+
     <section id="cy"></section>
+
+    <!-- pulsantiera icone -->
+    <section>
+      <button class="icon-btn" onclick="oneStep()">
+        ⏯️
+      </button>
+      <button id="pause-btn" class="icon-btn" onclick="togglePause()">
+        ⏸️
+      </button>
+      <button class="warn icon-btn" onclick="reset()">
+        🔂
+      </button>
+    </section>
 
   </main>
 

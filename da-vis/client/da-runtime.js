@@ -153,6 +153,9 @@ async function flushMessages(nodes) {
     }
 }
 
+const {BehaviorSubject, filter, take} = rxjs;
+log(`Behaviour subject! Filter! Take!`, BehaviorSubject, filter, take);
+
 /**
  * The main function to run an algorithm on a distributed network
  * 
@@ -163,6 +166,11 @@ async function run(algorithm, nodes, options = {}) {
 
     const roundTimeout = options['roundTimeout'] ?? 1000;
     const applyStyle = options['applyStyle'] ?? (() => {});
+    const pauseBehavior = options['pauseBehavior'] ?? new BehaviorSubject(false); // default, never paused
+    const onPlay = pauseBehavior.pipe(
+        filter(isPaused => !isPaused),
+        take(1)
+    );
     
 
     log('Init')
@@ -210,9 +218,18 @@ async function run(algorithm, nodes, options = {}) {
                 applyStyle(node);
             }
             if (nodes.some(node => !node.stopped)) {
-                setTimeout(() => {
-                    iteration(count + 1);
-                }, roundTimeout);
+                // onplay is a BehaviourSubject, hence it emits once right after it is subscribed
+                // it emits only once and then unsubscribes (take(1))
+                onPlay.subscribe({
+                    next: () => {
+                        setTimeout(() => {
+                            iteration(count + 1);
+                        }, roundTimeout);
+                    },
+                    complete: () => {
+                        log("SUBSCRIBE COMPLETED")
+                    }
+                });
             } else {
                 // wrapped in set timeout to await for all invokes to finish
                 // not necessary, but more ordered
@@ -224,5 +241,6 @@ async function run(algorithm, nodes, options = {}) {
         iteration(0);
     })
     const count = await loop;
-    log(`[MAIN LOOP OUT] Number of loops was ${count}`)
+    log(`[MAIN LOOP OUT] Number of loops was ${count}`);
+    return count;
 }

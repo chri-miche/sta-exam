@@ -28,12 +28,23 @@ nav {
 
 main {
     flex: 1 1 auto;
+    display: flex;
+
+}
+
+section {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: start;
+    gap: 1rem;
 }
 
 button {
     border: none;
     background: #002147;
     padding: 0.5rem 1rem;
+    border: 2px solid #002147;
     border-radius: 1.5rem;
     color: white;
     transition: 0.25s;
@@ -58,7 +69,25 @@ button.warn:hover {
     background: rgba(139, 0, 0, 0.8);
 }
 
+button.selected {
+    background-color: white;
+    border: 2px solid #002147;
+    color: #002147;
+}
+
+button.selected:hover {
+    background-color: whitesmoke;
+}
+
+button.icon-btn {
+    height: 45px;
+    width: 45px;
+    border-radius: 50%;
+    background: none;
+    border: 2px solid black;
+}
+
 #cy {
-    margin: auto;
-    height: 100%;
+    flex: 1 1 auto;
+    display: initial;
 }
