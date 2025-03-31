@@ -107,6 +107,14 @@ function setup_cytoscape(n, edges) {
       },
 
       {
+        selector: '.is-root-true',
+        style: {
+          'border-width': '2px',
+          'border-color': 'yellow'
+        }
+      },
+
+      {
         selector: '.stopped',
         style: {
           'border-color': 'black'
@@ -147,6 +155,17 @@ function ring_net() {
 
   const edges = 
   [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 0]]
+  ;
+
+  return setup_cytoscape(n, edges);
+
+}
+
+function forest_net() {
+  const n = 15;
+
+  const edges = 
+  [[0, 1], [1, 2], [1, 3], [1, 4], [5, 6], [6, 7], [6, 8], [8, 11], [8, 9], [8, 10], [11, 12], [12, 13], [13, 14], [13, 1]]
   ;
 
   return setup_cytoscape(n, edges);
@@ -261,3 +280,12 @@ async function naive_mis(node) {
     node.properties['round'] = currentRound + 1;
   }
 }
+
+function setup_step_ldc() {
+  for (const node of window.net) {
+    if ([1, 6, 11].includes(node.id)) {
+      node.properties['is-root'] = true;
+    }
+  }
+}
+

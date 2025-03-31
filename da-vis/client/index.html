@@ -40,6 +40,9 @@
       <button onclick="selectNet(ring_net, this)">
         Ring net
       </button>
+      <button id="forest-net-btn" onclick="selectNet(forest_net, this)">
+        Forest net
+      </button>
     </div>
     <div>
       <p id="display-rounds">
@@ -60,6 +63,9 @@
       </button>
       <button onclick="main(naive_mis)">
         Naive MIS
+      </button>
+      <button onclick="selectNet(forest_net, document.getElementById('forest-net-btn'));setup_step_ldc()">
+        Single step lcd example
       </button>
     </section>
 
