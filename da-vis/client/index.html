@@ -58,13 +58,13 @@
     <!-- algorithm selection -->
     <section>
       <h3>Run algorithm</h3>
-      <button onclick="main(wave_1)">
+      <button onclick="main([wave_1])">
         Wave
       </button>
-      <button onclick="main(naive_mis)">
+      <button onclick="main([naive_mis])">
         Naive MIS
       </button>
-      <button onclick="selectNet(forest_net, document.getElementById('forest-net-btn'));setup_step_ldc()">
+      <button onclick="selectNet(forest_net, document.getElementById('forest-net-btn'));main([build_trees, propose_join]);togglePause()">
         Single step lcd example
       </button>
     </section>

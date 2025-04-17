@@ -115,6 +115,20 @@ function setup_cytoscape(n, edges) {
       },
 
       {
+        selector: '.color-red',
+        style: {
+          'background-color': 'coral'
+        }
+      },
+
+      {
+        selector: '.color-blue',
+        style: {
+          'background-color': 'teal'
+        }
+      },
+
+      {
         selector: '.stopped',
         style: {
           'border-color': 'black'
@@ -174,6 +188,9 @@ function forest_net() {
 
 function selectNet(net_fn, btn) {
   if (btn) {
+    if (window.net && btn.classList.contains("selected")) {
+      return;
+    }
     const oldSel = document.getElementsByClassName("selected")[0];
     oldSel.classList.remove("selected");
     btn.classList.add("selected");
@@ -190,24 +207,31 @@ selectNet(net_1);
 
 const pauseBehavior = new BehaviorSubject(false);
 
-async function main(algorithm) {
+async function main(algorithms) {
+
+  let totalRounds = 0;
+  for (const algorithm of algorithms) {
+    const rounds = await run(algorithm, window.net, {
+      // roundTimeout: 1000,
+      applyStyle: node => {
+        const els = window.cy.elements(`#${node.id}`);
+        for (const [key, value] of Object.entries(node.properties)) {
+          els.addClass(`${key}-${value}`);
+        }
+        if (node.stopped) {
+          els.addClass('stopped');
+        }
+        console.warn(els);
+      },
+      pauseBehavior: pauseBehavior
+    });
+
+    totalRounds += rounds;
+  }
   
-  const rounds = await run(algorithm, window.net, {
-    // roundTimeout: 1000,
-    applyStyle: node => {
-      const els = window.cy.elements(`#${node.id}`);
-      for (const [key, value] of Object.entries(node.properties)) {
-        els.addClass(`${key}-${value}`);
-      }
-      if (node.stopped) {
-        els.addClass('stopped');
-      }
-      console.warn(els);
-    },
-    pauseBehavior: pauseBehavior
-  });
+  
   const displayRounds = document.getElementById("display-rounds");
-  displayRounds.innerHTML = `Total: ${rounds} communication rounds`
+  displayRounds.innerHTML = `Total: ${totalRounds} communication rounds`
 }
 
 function reset() {
@@ -256,7 +280,7 @@ async function wave_1(node) {
   } else {
     console.warn(`${node} does nothing`)
     const messages = await broadcast(node, null);
-    if (messages.includes('wave')) {
+    if (messages.map(mail => mail.body).includes('wave')) {
       await wave_neighbours();
     }
   }
@@ -269,7 +293,7 @@ async function naive_mis(node) {
     message = 'want-to-select';
   }
   const messages = await broadcast(node, message);
-  if (messages.includes('want-to-select')) {
+  if (messages.map(mail => mail.body).includes('want-to-select')) {
     node.properties['mis-selected'] = false;
     node.stop();
   } else if (message === 'want-to-select') {
@@ -281,11 +305,75 @@ async function naive_mis(node) {
   }
 }
 
-function setup_step_ldc() {
-  for (const node of window.net) {
-    if ([1, 6, 11].includes(node.id)) {
-      node.properties['is-root'] = true;
+async function build_trees(node) {
+  if (!node.properties['phase']) {
+    for (const node of window.net) {
+      if ([1, 6, 11].includes(node.id)) {
+        node.properties['is-root'] = true;
+      }
+      if (node.id === 11) {
+        node.properties['color'] = 'blue';
+      }
+      if ([1, 6].includes(node.id)) {
+        node.properties['color'] = 'red';
+      }
+    }
+    node.properties['phase'] = 'build-tree';
+  }
+  if (node.properties['phase'] === 'build-tree') {
+    // inform children that they are colored
+    if (!node.properties['color']) {
+
+      const colors = await broadcast(node, null);
+      const blue = colors.find(mail => mail.body === 'blue');
+      const red = colors.find(mail => mail.body === 'red');
+      if (blue) {
+        // prio to blue just for this example
+        node.properties['color'] = 'blue';
+        node.properties['parent'] = blue.header.sender;
+      } else if (red) {
+        node.properties['color'] = 'red';
+        node.properties['parent'] = red.header.sender;
+      }
+
+    } else {
+
+      await broadcast(node, node.properties['color']);
+      node.properties['phase'] = 'discover';
+      node.stop();
     }
   }
+}
+
+async function propose_join(node) {
+  if (node.properties['phase'] !== 'propose') {
+    // discover neighbours colors
+    const messages = await broadcast(node, node.properties['color']);
+    let wantPropose = false;
+    if (node.properties['color'] === 'blue') {
+      if (messages.find(mail => mail.body === 'red')) {
+        // I have a red neighbour, wanna join!
+        wantPropose = true;
+      }
+    }
+    node.properties['phase'] = 'propose';
+  }
+  if (node.properties['phase'] === 'propose') {
+    if (wantPropose) {
+      // Children, don't propose!
+      const messages = await broadcast(node, 'dont-propose');
+      if (messages.find(mail => mail.body === 'dont-propose'
+                                && mail.header.sender === node.properties['parent'])) {
+        // Ouch, my parent wants to propose. I can't.
+        canPropose = false;
+        node.stop();
+      } else {
+
+      }
+    }
+  }
+  console.log();
+  await broadcast(node, null);
+  node.stop();
 }
 

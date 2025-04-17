@@ -44,6 +44,12 @@ class Node {
         }
     }
 
+    /** Restart a node with a new invoke function. */
+    restart(invoke) {
+        this.stopped = false;
+        this.invoke = invoke;
+    }
+
     /**
      * A node yielding has to do two things:
      * 1. notify the runtime that the yielding promise is resolved;
@@ -106,7 +112,13 @@ async function communicate(sender, dispatch) {
     const recipients = sender.neighbours;
     log(`Sender ${sender} sends message ${dispatch} to neighbours: recipients=${recipients}`)
     for (const recipient of recipients) {
-        recipient.mailbox.push(dispatch[recipient.id] || null);
+        const mail = {
+            header: {
+                sender: sender.id
+            },
+            body: dispatch[recipient.id] ?? null
+        }
+        recipient.mailbox.push(mail);
     }
     // time to cede control to runtime
     // yes honey..
@@ -176,11 +188,12 @@ async function run(algorithm, nodes, options = {}) {
     log('Init')
     const toResume = [];
     for (const node of nodes) {
-        node.invoke = async () => {
+        // setting stopped to false; setting invoke function
+        node.restart(async () => {
             log(`[INVOKE] Invoking ${node}`)
             await algorithm(node);
             log(`[INVOKE] End of ${node}`)
-        }
+        });
         toResume.push(node);
     }
 
