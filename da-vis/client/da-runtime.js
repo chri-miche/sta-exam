@@ -165,8 +165,8 @@ async function flushMessages(nodes) {
     }
 }
 
-const {BehaviorSubject, filter, take} = rxjs;
-log(`Behaviour subject! Filter! Take!`, BehaviorSubject, filter, take);
+const {BehaviorSubject, filter, take, firstValueFrom} = rxjs;
+log(`fvf!!`, firstValueFrom);
 
 /**
  * The main function to run an algorithm on a distributed network
@@ -224,25 +224,20 @@ async function run(algorithm, nodes, options = {}) {
                     toResume.push(node);
                 }); // no await
             }
-            log(`[MAIN LOOP] resumed all. Flushing messages in a while`)
+            log(`[MAIN LOOP] Checking pause`)
+            // onplay is a BehaviourSubject, hence it emits once right after it is subscribed
+            // it emits only once and then unsubscribes (take(1))
+            await firstValueFrom(onPlay);
+            log(`[MAIN LOOP] Resumed all. Flushing messages in a while`)
             await flushMessages(nodes);
             log(`[MAIN LOOP] Flushed all messages`)
             for (const node of nodes) {
                 applyStyle(node);
             }
             if (nodes.some(node => !node.stopped)) {
-                // onplay is a BehaviourSubject, hence it emits once right after it is subscribed
-                // it emits only once and then unsubscribes (take(1))
-                onPlay.subscribe({
-                    next: () => {
-                        setTimeout(() => {
-                            iteration(count + 1);
-                        }, roundTimeout);
-                    },
-                    complete: () => {
-                        log("SUBSCRIBE COMPLETED")
-                    }
-                });
+                setTimeout(() => {
+                    iteration(count + 1);
+                }, roundTimeout);
             } else {
                 // wrapped in set timeout to await for all invokes to finish
                 // not necessary, but more ordered

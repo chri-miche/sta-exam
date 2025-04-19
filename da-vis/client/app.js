@@ -60,7 +60,8 @@ function setup_cytoscape(n, edges) {
           "text-valign" : "center",
           "text-halign" : "center",
           'border-width': '1px',
-          'border-color': 'lightgrey'
+          'border-color': 'black',
+          'border-style': 'dashed'
         }
       },
 
@@ -109,8 +110,7 @@ function setup_cytoscape(n, edges) {
       {
         selector: '.is-root-true',
         style: {
-          'border-width': '2px',
-          'border-color': 'yellow'
+          'border-width': '3px',
         }
       },
 
@@ -129,9 +129,17 @@ function setup_cytoscape(n, edges) {
       },
 
       {
+        selector: '.can-propose-true',
+        style: {
+          'border-color': 'red',
+          'border-width': '2px'
+        }
+      },
+
+      {
         selector: '.stopped',
         style: {
-          'border-color': 'black'
+          'border-style': 'solid'
         }
       }
     ],
@@ -179,7 +187,7 @@ function forest_net() {
   const n = 15;
 
   const edges = 
-  [[0, 1], [1, 2], [1, 3], [1, 4], [5, 6], [6, 7], [6, 8], [8, 11], [8, 9], [8, 10], [11, 12], [12, 13], [13, 14], [13, 1]]
+  [[0, 1], [1, 2], [1, 3], [1, 4], [5, 6], [6, 7], [6, 8], [8, 11], [8, 9], [8, 10], [11, 12], [12, 13], [13, 14], [13, 1], [9, 14]]
   ;
 
   return setup_cytoscape(n, edges);
@@ -211,15 +219,23 @@ async function main(algorithms) {
 
   let totalRounds = 0;
   for (const algorithm of algorithms) {
+    for (const node of window.net) {
+      if (node.stopped) {
+        node.restart();
+      }
+    }
     const rounds = await run(algorithm, window.net, {
       // roundTimeout: 1000,
       applyStyle: node => {
         const els = window.cy.elements(`#${node.id}`);
+        els.classes([]);
         for (const [key, value] of Object.entries(node.properties)) {
           els.addClass(`${key}-${value}`);
         }
         if (node.stopped) {
           els.addClass('stopped');
+        } else {
+          els.removeClass('stopped');
         }
         console.warn(els);
       },
@@ -257,6 +273,11 @@ function togglePause() {
 function oneStep() {
   pauseBehavior.next(false);
   pauseBehavior.next(true);
+}
+
+function setDisplayPhase(title) {
+  const p = document.getElementById("display-phase");
+  p.innerHTML = title;
 }
 
 // run(wave_1, net);
@@ -305,75 +326,107 @@ async function naive_mis(node) {
   }
 }
 
-async function build_trees(node) {
-  if (!node.properties['phase']) {
-    for (const node of window.net) {
-      if ([1, 6, 11].includes(node.id)) {
-        node.properties['is-root'] = true;
-      }
-      if (node.id === 11) {
-        node.properties['color'] = 'blue';
-      }
-      if ([1, 6].includes(node.id)) {
-        node.properties['color'] = 'red';
-      }
-    }
-    node.properties['phase'] = 'build-tree';
+async function define_roots(node) {
+  setDisplayPhase("Defining roots");
+  if ([1, 6, 11].includes(node.id)) {
+    node.properties['is-root'] = true;
   }
-  if (node.properties['phase'] === 'build-tree') {
-    // inform children that they are colored
-    if (!node.properties['color']) {
-
-      const colors = await broadcast(node, null);
-      const blue = colors.find(mail => mail.body === 'blue');
-      const red = colors.find(mail => mail.body === 'red');
-      if (blue) {
-        // prio to blue just for this example
-        node.properties['color'] = 'blue';
-        node.properties['parent'] = blue.header.sender;
-      } else if (red) {
-        node.properties['color'] = 'red';
-        node.properties['parent'] = red.header.sender;
-      }
-
-    } else {
-
-      await broadcast(node, node.properties['color']);
-      node.properties['phase'] = 'discover';
-      node.stop();
-    }
+  if (node.id === 11) {
+    node.properties['color'] = 'blue';
   }
-}
-
-async function propose_join(node) {
-  if (node.properties['phase'] !== 'propose') {
-    // discover neighbours colors
-    const messages = await broadcast(node, node.properties['color']);
-    let wantPropose = false;
-    if (node.properties['color'] === 'blue') {
-      if (messages.find(mail => mail.body === 'red')) {
-        // I have a red neighbour, wanna join!
-        wantPropose = true;
-      }
-    }
-    node.properties['phase'] = 'propose';
+  if ([1, 6].includes(node.id)) {
+    node.properties['color'] = 'red';
   }
-  if (node.properties['phase'] === 'propose') {
-    if (wantPropose) {
-      // Children, don't propose!
-      const messages = await broadcast(node, 'dont-propose');
-      if (messages.find(mail => mail.body === 'dont-propose'
-                                && mail.header.sender === node.properties['parent'])) {
-        // Ouch, my parent wants to propose. I can't.
-        canPropose = false;
-        node.stop();
-      } else {
-
-      }
-    }
-  }
-  console.log();
   await broadcast(node, null);
   node.stop();
 }
 
+async function build_trees(node) {
+  // inform children that they are colored
+  if (!node.properties['color']) {
+
+    const colors = await broadcast(node, null);
+    const blue = colors.find(mail => mail.body === 'blue');
+    const red = colors.find(mail => mail.body === 'red');
+    if (blue) {
+      // prio to blue just for this example
+      node.properties['color'] = 'blue';
+      node.properties['parent'] = blue.header.sender;
+    } else if (red) {
+      node.properties['color'] = 'red';
+      node.properties['parent'] = red.header.sender;
+    }
+
+  } else {
+
+    await broadcast(node, node.properties['color']);
+    node.stop();
+  }
+  setDisplayPhase("Building trees");
+}
+
+async function discover_neighbours_colors(node) {
+  node.properties['want-propose'] = false;
+  const messages = await broadcast(node, node.properties['color']);
+  if (node.properties['color'] === 'blue') {
+    if (messages.find(mail => mail.body === 'red')) {
+      // I have a red neighbour, I want to join!
+      node.properties['want-propose'] = true;
+    }
+  }
+  node.properties['can-propose'] = node.properties['want-propose'];
+  setDisplayPhase("Discover neighbours colors");
+  node.stop();
+}
+
+async function build_v_propose(node) {
+  if (!node.properties['parent']) {
+    // I am root, I have to do something different
+    if (node.properties['want-propose']) {
+      await broadcast(node, 'dont-propose');
+    } else {
+      // allow children
+      await broadcast(node, 'can-propose');
+    }
+    node.stop();
+  } else {
+    let messages = [];
+    if (node.properties['want-propose']) {
+      // Children, don't propose!
+      messages = await broadcast(node, 'dont-propose');
+    } else {
+      messages = await broadcast(node, null);
+      // possibly forward messages from parent
+    }
+    const messageFromParent = messages.find(mail => mail.header.sender === node.properties['parent']);
+    // i assume messageFromParent !== null
+    if (messageFromParent.body === 'dont-propose') {
+      node.properties['want-propose'] = true;
+      node.properties['can-propose'] = false;
+    } else if (messageFromParent.body === 'can-propose') {
+      await broadcast(node, 'can-propose'); // it may happen that can-propose is sent after a dont-propose, but it is required for child nodes to stop
+      node.stop();
+    }
+  }
+
+  setDisplayPhase("Building V^propose");
+}
+
+async function count_children(node) {
+  if (!node.properties['parent']) {
+    const messages = await broadcast(node, 'echo');
+  }
+}
+
+async function propose(node) {
+  if (node.properties['can-propose']) {
+    
+  }
+}
+
+const example_ldc = [
+  define_roots, 
+  build_trees, 
+  discover_neighbours_colors, 
+  build_v_propose
+];

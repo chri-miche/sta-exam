@@ -45,6 +45,9 @@
       </button>
     </div>
     <div>
+      <p id="display-phase">
+        
+      </p>
       <p id="display-rounds">
         
       </p>
@@ -64,7 +67,7 @@
       <button onclick="main([naive_mis])">
         Naive MIS
       </button>
-      <button onclick="selectNet(forest_net, document.getElementById('forest-net-btn'));main([build_trees, propose_join]);togglePause()">
+      <button onclick="selectNet(forest_net, document.getElementById('forest-net-btn'));main(example_ldc);togglePause()">
         Single step lcd example
       </button>
     </section>
