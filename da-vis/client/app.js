@@ -359,7 +359,22 @@ async function build_trees(node) {
 
   } else {
 
-    await broadcast(node, node.properties['color']);
+    let dispatch = {};
+    for (const neighbour of node.neighbours) {
+      dispatch[neighbour.id] = node.properties['color'];
+    }
+    if (node.properties['parent']) {
+      dispatch[node.properties['parent']] = node.id;
+    }
+
+    await communicate(node, dispatch);
+
+    const messages = await broadcast(node, null);
+    const children = messages
+      .filter(mail => typeof mail.body === 'number')
+      .map(mail => mail.body);
+
+    node.properties['children'] = children;
     node.stop();
   }
   setDisplayPhase("Building trees");
@@ -369,9 +384,11 @@ async function discover_neighbours_colors(node) {
   node.properties['want-propose'] = false;
   const messages = await broadcast(node, node.properties['color']);
   if (node.properties['color'] === 'blue') {
-    if (messages.find(mail => mail.body === 'red')) {
+    const redMessage = messages.find(mail => mail.body === 'red');
+    if (redMessage) {
       // I have a red neighbour, I want to join!
       node.properties['want-propose'] = true;
+      node.properties['red-neighbour'] = redMessage.header.sender;
     }
   }
   node.properties['can-propose'] = node.properties['want-propose'];
@@ -412,21 +429,50 @@ async function build_v_propose(node) {
   setDisplayPhase("Building V^propose");
 }
 
-async function count_children(node) {
-  if (!node.properties['parent']) {
-    const messages = await broadcast(node, 'echo');
+async function compute_size_of_trees(node) {
+  const childNum = node.properties.children?.length || 0;
+  if (childNum === 0) {
+    // there is only me in this subtree
+    node.properties['subtree-size'] = 1;
+    if (node.properties['parent']) {
+      const message = {};
+      message[node.properties['parent']] = 1;
+      await communicate(node, message);
+    } else {
+      // there is only me in this tree
+    }
+    node.stop();
+  } else {
+    let fromChildren = [];
+    while (fromChildren.length < childNum) {
+      const messages = await broadcast(node, null);
+      const fc = messages
+        .filter(mail => typeof mail.body === 'number')
+        .map(mail => mail.body);
+      fromChildren = fromChildren.concat(fc);
+    }
+    const total = fromChildren.reduce((partialSum, a) => partialSum + a, 0);
+    node.properties['subtree-size'] = total + 1;
+    
+    const message = {};
+    message[node.properties['parent']] = total + 1;
+    await communicate(node, message);
+    node.stop();
   }
 }
 
 async function propose(node) {
-  if (node.properties['can-propose']) {
-    
-  }
+  console.log(node.properties['subtree-size']);
+
+  await broadcast(node, node.properties['subtree-size']);
+  node.stop();
 }
 
 const example_ldc = [
   define_roots, 
   build_trees, 
   discover_neighbours_colors, 
-  build_v_propose
+  build_v_propose,
+  compute_size_of_trees,
+  propose
 ];
