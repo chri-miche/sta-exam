@@ -252,3 +252,11 @@ async function run(algorithm, nodes, options = {}) {
     log(`[MAIN LOOP OUT] Number of loops was ${count}`);
     return count;
 }
+
+function sleep(msec) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve();
+        }, msec);
+    });
+}

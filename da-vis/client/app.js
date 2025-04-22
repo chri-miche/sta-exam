@@ -129,6 +129,13 @@ function setup_cytoscape(n, edges) {
       },
 
       {
+        selector: '.color-grey',
+        style: {
+          'background-color': 'gainsboro'
+        }
+      },
+
+      {
         selector: '.can-propose-true',
         style: {
           'border-color': 'red',
@@ -184,10 +191,10 @@ function ring_net() {
 }
 
 function forest_net() {
-  const n = 15;
+  const n = 16;
 
   const edges = 
-  [[0, 1], [1, 2], [1, 3], [1, 4], [5, 6], [6, 7], [6, 8], [8, 11], [8, 9], [8, 10], [11, 12], [12, 13], [13, 14], [13, 1], [9, 14]]
+  [[0, 1], [1, 2], [1, 3], [1, 4], [5, 6], [6, 7], [6, 8], [8, 11], [8, 9], [8, 10], [11, 12], [12, 13], [13, 14], [13, 1], [9, 14], [12, 15]]
   ;
 
   return setup_cytoscape(n, edges);
@@ -219,10 +226,9 @@ async function main(algorithms) {
 
   let totalRounds = 0;
   for (const algorithm of algorithms) {
+    
     for (const node of window.net) {
-      if (node.stopped) {
-        node.restart();
-      }
+      node.restart();
     }
     const rounds = await run(algorithm, window.net, {
       // roundTimeout: 1000,
@@ -237,10 +243,13 @@ async function main(algorithms) {
         } else {
           els.removeClass('stopped');
         }
-        console.warn(els);
       },
       pauseBehavior: pauseBehavior
     });
+
+    await sleep(1000);
+    
+    await firstValueFrom(pauseBehavior);
 
     totalRounds += rounds;
   }
@@ -430,6 +439,7 @@ async function build_v_propose(node) {
 }
 
 async function compute_size_of_trees(node) {
+  setDisplayPhase("Computing the sizes of the subtrees")
   const childNum = node.properties.children?.length || 0;
   if (childNum === 0) {
     // there is only me in this subtree
@@ -461,10 +471,86 @@ async function compute_size_of_trees(node) {
   }
 }
 
+async function broadcast_tree_size(node) {
+  setDisplayPhase("Computing tree sizes")
+  if (!node.properties['parent']) {
+    node.properties['tree-size'] = node.properties['subtree-size'];
+    await broadcast(node, node.properties['subtree-size']);
+  } else {
+    let fromParent = null;
+    while (!fromParent) {
+      const messages = await broadcast(node, null);
+      fromParent = messages.find(mail => mail.header.sender === node.properties['parent']);
+    }
+    node.properties['tree-size'] = fromParent.body;
+    await broadcast(node, fromParent.body);
+  }
+  node.stop();
+}
+
 async function propose(node) {
+  setDisplayPhase("Proposing");
   console.log(node.properties['subtree-size']);
 
-  await broadcast(node, node.properties['subtree-size']);
+  if (node.properties['color'] === 'blue' && node.properties['can-propose']) {
+    const receiver = node.properties['red-neighbour'];
+
+    let message = {};
+    message[receiver] = node.properties['subtree-size'];
+
+    await communicate(node, message);
+
+    const messages = await broadcast(node, null);
+    const mail = messages.find(mail => mail.body === 'accept');
+    if (mail) {
+      node.properties['parent'] = mail.header.sender;
+      node.properties['color'] = 'red';
+    } else {
+      node.properties['parent'] = null;
+      node.properties['is-root'] = true;
+      node.properties['color'] = 'grey';
+    }
+  } else if (node.properties['color'] === 'red') {
+    const proposals = await broadcast(node, null);
+    for (const proposal of proposals) {
+      if (proposal.body) {
+        if (proposal.body >= node.properties['tree-size'] / 2) {
+          // ok accept
+
+          const msg = {};
+          msg[proposal.header.sender] = 'accept';
+          await communicate(node, msg);
+
+        } else {
+          // remove
+
+          await broadcast(node, null);
+
+        }
+
+      }
+    }
+  } else {
+    await broadcast(node, null);
+  }
+
+  node.stop();
+}
+
+async function propagate_colors(node) {
+  if (node.properties['is-root']) {
+    await broadcast(node, node.properties['color']);
+  } else {
+    let fromParent = null;
+    while (!fromParent) {
+      const messages = await broadcast(node, null);
+      fromParent = messages.find(mail => mail.header.sender === node.properties['parent']
+        && mail.body
+      );
+    }
+    node.properties['color'] = fromParent.body;
+    await broadcast(node, fromParent.body);
+  }
   node.stop();
 }
 
@@ -474,5 +560,7 @@ const example_ldc = [
   discover_neighbours_colors, 
   build_v_propose,
   compute_size_of_trees,
-  propose
+  broadcast_tree_size,
+  propose,
+  propagate_colors
 ];
