@@ -570,18 +570,23 @@ const example_ldc = [
 // full algorithm
 // low diameter clustering
 
-function low_diameter_clustering() {
+async function low_diameter_clustering() {
   const maxId = Math.max(...window.net.map(node => node.id));
-  const b = Math.ceil(Math.log(maxId)); // num of phases
+  const b = bitsForInteger(maxId);
+
+  // In order to make the choice of expanding nodes must know b
+  for (const node of window.net) {
+    node.properties['b'] = b;
+  }
 
   // SETUP V_i: set of living vertices
-  // V_i is represented by the nodes that have the property 'living' === true
+  // V_i is represented by the nodes that have the property 'alive' === true
   for (const node of window.net) {
-    node.properties['living'] = true;
+    node.properties['alive'] = true;
   }
   // V_0 = V
 
-  // SETUP Q_i: set of living terminals
+  // SETUP Q_i: set of terminal nodes
   // Q_i is represented by the nodes that have the property 'terminal' === true
   for (const node of window.net) {
     node.properties['terminal'] = true;
@@ -594,38 +599,44 @@ function low_diameter_clustering() {
   }
 
   const ldcStep = [
-    // color_roots,                          // O(1) 
-    build_bfs_tree,                       // O(diam(T)) // note: this builds a bfs forest assuming roots are colored
+    connect_parents,                      // O(1)
     compute_size_of_trees,                // O(diam(T))
-    broadcast_tree_size,                  // O(diam(T))
     discover_red_neighbours,              // O(1)
     build_v_propose,                      // O(diam(T))
-    propose,                              // O(1)
+    propose,                              // O(diam(T))
     decide_to_grow,                       // O(diam(T))
+    fix_forest                            // O(diam(T))
   ];
 
-  const ldcPhase = [];
-  for (let i = 0; i++; i < 2 * b^2) {
-    // ldcPhase.push(build_bfs_tree);
-    ldcPhase.push(...ldcStep);
-  }
-  // TODO questa parte va fatta in automatico in decide_to_grow?
-  // ldcPhase.push(---update V_i Q_i and colors)
 
-  const phases = [];
-  for (let i = 0; i++; i < b) {
-    phases.push(elect_new_roots);
-    phases.push(...ldcPhase);
-    phases.push(increase_phase_index);
+  for (let i = 0; i < b; i++) {
+    // one phase
+    await main([elect_new_roots]);
+    await main([build_bfs_tree]);
+    for (let i = 0; i < (2 * b^2); i++) {
+      if (window.net.some(node => node.properties.color === 'blue')) {
+        await main(ldcStep.map(alg_fn => {
+          return async (node) => {
+            if (node.properties['alive']) {
+              await alg_fn(node);
+            } else {
+              await broadcast(node, null);
+              node.stop();
+            }
+          }
+        }));
+      }
+    }
+    await main([increase_phase_index]);
   }
-
-  return phases;
   
 }
 
 async function elect_new_roots(node) {
+  setDisplayPhase(`LDC: Start of phase ${node.properties['phase_i']}/${node.properties['b']}`);
   // if a node is a terminal, it is the root of a tree in this phase
   if (node.properties['terminal'] && node.properties['alive']) {
+    node.properties['is-root'] = true;
     // color depends on 
     if (checkKthBit(node.id, node.properties['phase_i'])) {
       node.properties['color'] = 'red';
@@ -638,14 +649,17 @@ async function elect_new_roots(node) {
 }
 
 async function increase_phase_index(node) {
+  setDisplayPhase(`LDC: End of phase ${node.properties['phase_i']}`);
   node.properties['phase_i'] += 1;
   await broadcast(node, null);
   node.stop();
 }
 
 async function build_bfs_tree(node) {
-  node.properties['children'] = [];
-  if (node.properties['alive']) {
+  setDisplayPhase(`LDC: Building BFS tree`);
+  if (!node.properties['alive']) {
+    await broadcast(node, null);
+  } else {
     if (node.properties['terminal']) {
       await broadcast(node, node.properties['color']);
       node.properties['parent'] = null;
@@ -659,25 +673,224 @@ async function build_bfs_tree(node) {
       }
       node.properties['color'] = selected.body;
       node.properties['parent'] = selected.header.sender;
-      // send join messages to all children, send accept notification to parent
-      let message = {};
-      for (const neighbour of node.neighbours) {
-        message[neighbour.id] = selected.body;
-      }
-      message[selected.header.sender] = true;
-      await communicate(node, message);
+      // send join messages to all children
+      await broadcast(node, selected.body);
     }
-    // await for children responses
-    const answers = await broadcast(node, null);
-    for (const answer of answers) {
-      if (answer.body) {
-        node.properties['children'].push(answer.header.sender);
-      }
+  }
+  node.stop();
+}
+
+async function connect_parents(node) {
+  setDisplayPhase(`LDC: Connecting parents and children`);
+  node.properties['children'] = [];
+  let message = {};
+  message[node.properties['parent']] = true;
+  const children = await communicate(node, message);
+  for (const child of children) {
+    if (child.body) {
+      node.properties['children'].push(child.header.sender);
     }
-    node.stop();
+  }
+  node.stop();
+}
+
+async function compute_size_of_trees(node) {
+  setDisplayPhase(`LDC: Computing sizes of (sub)-trees`);
+  let messages = [];
+  while (messages.length < node.properties['children'].length) {
+    const received = await broadcast(node, null);
+    messages.push(...received
+      .filter(mail => mail.body)
+      .filter(mail => node.properties['children'].includes(mail.header.sender))
+      .map(mail => mail.body));
+  }
+  const total = messages.reduce((partialSum, a) => partialSum + a, 1);
+  node.properties['rooted-tree-size'] = total;
+  let message = {};
+  message[node.properties['parent']] = total;
+  await communicate(node, message);
+  node.stop();
+}
+
+async function discover_red_neighbours(node) {
+  setDisplayPhase(`LDC: Discovering red neighbours`);
+  node.properties['want-propose'] = false;
+  const messages = await broadcast(node, node.properties['color']);
+  if (node.properties['color'] === 'blue') {
+    const redMessage = messages.find(mail => mail.body === 'red');
+    if (redMessage) {
+      // I have a red neighbour, I want to join!
+      node.properties['want-propose'] = true;
+      node.properties['red-neighbour'] = redMessage.header.sender;
+    }
+  }
+  node.properties['can-propose'] = node.properties['want-propose'];
+  node.stop();
+}
+
+async function build_v_propose(node) {
+  setDisplayPhase(`LDC: Building V_propose`);
+
+  if (node.properties['color'] === 'blue') {
+
+    if (node.properties['is-root']) {
+      if (node.properties['want-propose']) {
+        await broadcast(node, 'dont-propose');
+      }
+      await broadcast(node, 'shutdown');
+      node.stop();
+    } else {
+  
+      let fromParent = null;
+      while (fromParent !== 'shutdown') {
+        const messages = await broadcast(node, fromParent)
+        const fp = messages
+          .find(mail => mail.header.sender === node.properties['parent']);
+        fromParent = fp.body;
+        if (fromParent === 'dont-propose') {
+          node.properties['can-propose'] = false;
+        }
+      }
+      await broadcast(node, 'shutdown');
+      node.stop();
+  
+    }
+
   } else {
     await broadcast(node, null);
     node.stop();
   }
 }
+
+async function propose(node) {
+  setDisplayPhase(`LDC: Proposing`);
+  if (node.properties['color'] === 'blue') {
+    if (node.properties['can-propose']) {
+      // I propose to my red friend!
+      let message = {};
+      message[node.properties['red-neighbour']] = node.properties['rooted-tree-size'];
+      await communicate(node, message);
+      node.stop();
+    } else {
+      await broadcast(node, null);
+      node.stop();
+    }
+  } else {
+    // first messages are joining blue nodes
+    const proposals = await broadcast(node, null);
+    node.properties['proposals'] = proposals
+      .filter(mail => typeof mail.body === 'number')
+      .map(mail => mail.header.sender);
+    const totalProposed = proposals
+      .filter(mail => typeof mail.body === 'number')
+      .map(mail => mail.body)
+      .reduce((partialSum, a) => partialSum + a, 0);
+    
+    // then i await reports from children
+    
+    let messages = [];
+    while (messages.length < node.properties['children'].length) {
+      const received = await broadcast(node, null);
+      messages.push(...received
+        .filter(mail => typeof mail.body === 'number')
+        .filter(mail => node.properties['children'].includes(mail.header.sender))
+        .map(mail => mail.body));
+    }
+    const totalGain = messages.reduce((partialSum, a) => partialSum + a, totalProposed);
+    node.properties['total-gain'] = totalGain;
+
+    let message = {};
+    message[node.properties['parent']] = totalGain;
+    await communicate(node, message);
+    node.stop();
+  }
+}
+
+async function decide_to_grow(node) {
+  setDisplayPhase(`LDC: Deciding whether to grow or not`);
+
+  if (node.properties['color'] === 'red') {
+    let annex;
+    if (node.properties['is-root']) {
+      if (node.properties['total-gain'] >= node.properties['rooted-tree-size'] / (2 * node.properties['b'])) {
+        // annex all nodes
+        annex = true;
+      } else {
+        // kill all proposing nodes
+        annex = false;
+      }
+    } else {
+      let found = null;
+      while (!found) {
+        const messages = await broadcast(node, null);
+        found = messages.find(mail => mail.header.sender === node.properties['parent']
+          && typeof mail.body === 'boolean');
+      }
+      annex = found.body;
+    }
+    await broadcast(node, annex);
+
+    // now, inform blue nodes
+
+    let message = {};
+    for (const proposal of node.properties['proposals']) {
+      message[proposal] = annex;
+      if (annex) {
+        node.properties['children'].push(proposal);
+      }
+    }
+    await communicate(node, message);
+    // decision communicated, nothing to do after this
+    node.stop();
+  } else {
+    
+    if ('red-neighbour' in node.properties) {
+
+      let found = null;
+      while (!found) {
+        const messages = await broadcast(node, null);
+        found = messages.find(mail => typeof mail.body === 'boolean');
+      }
+      if (found.body) {
+        // good, I'm in!
+        node.properties['parent'] = node.properties['red-neighbour'];
+        node.properties['is-root'] = false;
+        node.properties['terminal'] = false;
+      } else {
+        // oh no
+        node.properties['parent'] = null;
+        node.properties['is-root'] = true;
+        node.properties['color'] = null;
+      }
+      node.stop();
+
+    } else {
+      // I don't have to await for a proposal decision
+      await broadcast(node, null);
+      node.stop();
+    }
+  }
+}
+
+async function fix_forest(node) {
+  setDisplayPhase(`LDC: Applying decisions`);
+
+  if (!node.properties['is-root']) {
+    let found = null;
+    while (!found) {
+      const messages = await broadcast(node, null);
+      found = messages.find(mail => mail.header.sender === node.properties['parent']);
+    }
+    node.properties['color'] = found.body;
+  }
+  node.properties['want-propose'] = false;
+  node.properties['can-propose'] = false;
+  await broadcast(node, node.properties['color']);
+  if (node.properties['color'] === null) {
+    node.properties['alive'] = false;
+    node.properties['terminal'] = false;
+  }
+  node.stop();
+}
+
 

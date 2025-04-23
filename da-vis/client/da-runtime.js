@@ -274,3 +274,11 @@ function checkKthBit(n, k) {
     
     return false;
 }
+
+function bitsForInteger(n) {
+    if (n === 0) {
+        return n;
+    } else {
+        return Math.floor(Math.log2(n)) + 1;
+    }
+}
