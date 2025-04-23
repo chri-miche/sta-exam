@@ -335,7 +335,7 @@ async function naive_mis(node) {
   }
 }
 
-async function define_roots(node) {
+async function color_roots_ex(node) {
   setDisplayPhase("Defining roots");
   if ([1, 6, 11].includes(node.id)) {
     node.properties['is-root'] = true;
@@ -350,7 +350,7 @@ async function define_roots(node) {
   node.stop();
 }
 
-async function build_trees(node) {
+async function color_trees_ex(node) {
   // inform children that they are colored
   if (!node.properties['color']) {
 
@@ -389,7 +389,7 @@ async function build_trees(node) {
   setDisplayPhase("Building trees");
 }
 
-async function discover_neighbours_colors(node) {
+async function discover_red_neighbours_ex(node) {
   node.properties['want-propose'] = false;
   const messages = await broadcast(node, node.properties['color']);
   if (node.properties['color'] === 'blue') {
@@ -405,7 +405,7 @@ async function discover_neighbours_colors(node) {
   node.stop();
 }
 
-async function build_v_propose(node) {
+async function build_v_propose_ex(node) {
   if (!node.properties['parent']) {
     // I am root, I have to do something different
     if (node.properties['want-propose']) {
@@ -438,7 +438,7 @@ async function build_v_propose(node) {
   setDisplayPhase("Building V^propose");
 }
 
-async function compute_size_of_trees(node) {
+async function compute_size_of_trees_ex(node) {
   setDisplayPhase("Computing the sizes of the subtrees")
   const childNum = node.properties.children?.length || 0;
   if (childNum === 0) {
@@ -471,7 +471,7 @@ async function compute_size_of_trees(node) {
   }
 }
 
-async function broadcast_tree_size(node) {
+async function broadcast_tree_size_ex(node) {
   setDisplayPhase("Computing tree sizes")
   if (!node.properties['parent']) {
     node.properties['tree-size'] = node.properties['subtree-size'];
@@ -488,7 +488,7 @@ async function broadcast_tree_size(node) {
   node.stop();
 }
 
-async function propose(node) {
+async function propose_ex(node) {
   setDisplayPhase("Proposing");
   console.log(node.properties['subtree-size']);
 
@@ -513,6 +513,7 @@ async function propose(node) {
   } else if (node.properties['color'] === 'red') {
     const proposals = await broadcast(node, null);
     for (const proposal of proposals) {
+      // SBAGLIATO NEL CASO GENERALE (bisogna fare la somma di tutti i nodi blu che vogliono proporsi)
       if (proposal.body) {
         if (proposal.body >= node.properties['tree-size'] / 2) {
           // ok accept
@@ -537,7 +538,7 @@ async function propose(node) {
   node.stop();
 }
 
-async function propagate_colors(node) {
+async function propagate_colors_ex(node) {
   if (node.properties['is-root']) {
     await broadcast(node, node.properties['color']);
   } else {
@@ -555,12 +556,128 @@ async function propagate_colors(node) {
 }
 
 const example_ldc = [
-  define_roots, 
-  build_trees, 
-  discover_neighbours_colors, 
-  build_v_propose,
-  compute_size_of_trees,
-  broadcast_tree_size,
-  propose,
-  propagate_colors
+  color_roots_ex, 
+  color_trees_ex, 
+  discover_red_neighbours_ex, 
+  build_v_propose_ex,
+  compute_size_of_trees_ex,
+  broadcast_tree_size_ex,
+  propose_ex,
+  propagate_colors_ex
 ];
+
+// let's begin
+// full algorithm
+// low diameter clustering
+
+function low_diameter_clustering() {
+  const maxId = Math.max(...window.net.map(node => node.id));
+  const b = Math.ceil(Math.log(maxId)); // num of phases
+
+  // SETUP V_i: set of living vertices
+  // V_i is represented by the nodes that have the property 'living' === true
+  for (const node of window.net) {
+    node.properties['living'] = true;
+  }
+  // V_0 = V
+
+  // SETUP Q_i: set of living terminals
+  // Q_i is represented by the nodes that have the property 'terminal' === true
+  for (const node of window.net) {
+    node.properties['terminal'] = true;
+  }
+  // Q_0 = V
+
+  // SETUP PHASE INDEX i
+  for (const node of window.net) {
+    node.properties['phase_i'] = 0;
+  }
+
+  const ldcStep = [
+    // color_roots,                          // O(1) 
+    build_bfs_tree,                       // O(diam(T)) // note: this builds a bfs forest assuming roots are colored
+    compute_size_of_trees,                // O(diam(T))
+    broadcast_tree_size,                  // O(diam(T))
+    discover_red_neighbours,              // O(1)
+    build_v_propose,                      // O(diam(T))
+    propose,                              // O(1)
+    decide_to_grow,                       // O(diam(T))
+  ];
+
+  const ldcPhase = [];
+  for (let i = 0; i++; i < 2 * b^2) {
+    // ldcPhase.push(build_bfs_tree);
+    ldcPhase.push(...ldcStep);
+  }
+  // TODO questa parte va fatta in automatico in decide_to_grow?
+  // ldcPhase.push(---update V_i Q_i and colors)
+
+  const phases = [];
+  for (let i = 0; i++; i < b) {
+    phases.push(elect_new_roots);
+    phases.push(...ldcPhase);
+    phases.push(increase_phase_index);
+  }
+
+  return phases;
+  
+}
+
+async function elect_new_roots(node) {
+  // if a node is a terminal, it is the root of a tree in this phase
+  if (node.properties['terminal'] && node.properties['alive']) {
+    // color depends on 
+    if (checkKthBit(node.id, node.properties['phase_i'])) {
+      node.properties['color'] = 'red';
+    } else {
+      node.properties['color'] = 'blue';
+    }
+  }
+  await broadcast(node, null);
+  node.stop();
+}
+
+async function increase_phase_index(node) {
+  node.properties['phase_i'] += 1;
+  await broadcast(node, null);
+  node.stop();
+}
+
+async function build_bfs_tree(node) {
+  node.properties['children'] = [];
+  if (node.properties['alive']) {
+    if (node.properties['terminal']) {
+      await broadcast(node, node.properties['color']);
+      node.properties['parent'] = null;
+    } else {
+      // the first that arrives is the parent
+      // if more arrive, it doesn't matter which to pick
+      let selected = null;
+      while (!selected) {
+        const messages = await broadcast(node, null);
+        selected = messages.find(mail => mail.body);
+      }
+      node.properties['color'] = selected.body;
+      node.properties['parent'] = selected.header.sender;
+      // send join messages to all children, send accept notification to parent
+      let message = {};
+      for (const neighbour of node.neighbours) {
+        message[neighbour.id] = selected.body;
+      }
+      message[selected.header.sender] = true;
+      await communicate(node, message);
+    }
+    // await for children responses
+    const answers = await broadcast(node, null);
+    for (const answer of answers) {
+      if (answer.body) {
+        node.properties['children'].push(answer.header.sender);
+      }
+    }
+    node.stop();
+  } else {
+    await broadcast(node, null);
+    node.stop();
+  }
+}
+

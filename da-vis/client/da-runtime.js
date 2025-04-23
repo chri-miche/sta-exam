@@ -253,10 +253,24 @@ async function run(algorithm, nodes, options = {}) {
     return count;
 }
 
+// utils
+
 function sleep(msec) {
     return new Promise(resolve => {
         setTimeout(() => {
             resolve();
         }, msec);
     });
+}
+
+function checkKthBit(n, k) {
+    
+    // example: if k === 3 => 00000001000
+    let val = (1 << k);
+    
+    if ((n & val) !== 0) {
+        return true;
+    } 
+    
+    return false;
 }
