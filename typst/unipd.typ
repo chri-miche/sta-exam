@@ -111,6 +111,7 @@
           } else {
             align(horizon + right, text(
               fill: unipd-red.lighten(65%),
+              size: 20pt,
               utils.current-section,
             ))
           },

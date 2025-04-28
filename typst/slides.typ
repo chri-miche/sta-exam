@@ -91,7 +91,7 @@
 
 #let formal-def(body) = underline[_#text(fill: unipd-red,weight: "bold")[#body]_]
 
-#let faded(body) = text(fill: rgb("#c9c9c9"), weight: "bold")[#body]
+#let faded(body) = text(fill: rgb("#999999"), weight: "bold")[#body]
 
 // todo background
 #let def(body) = [#formal-def[def:] #body]
@@ -544,56 +544,325 @@
   title: "MIS in CONGEST",
   new-section: [Network Decomposition]
 )[
-  - Censor-Hillel et al. provided an algorithm that solves MIS in $O(italic("diam")(G) log^2 n)$ in CONGEST @chps17
+  - Censor-Hillel et al. @chps17 provided an algorithm that solves MIS in $O(italic("diam")(G) log^2 n)$ in CONGEST
 
-  #warning[The diameter can be very large \ Worst case: $italic("diam")(G) = n$]
+  #warning[The diameter can be very large]
+
+  - Worst case: $italic("diam")(G) = n$
+  - How can we improve it?
 ]
+
+
+
+  #let network-decomposition = [
+    #set align(center)
+
+    #cetz.canvas({
+      import cetz.draw: *
+
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+
+      line((-2, 1), (2, 1.5))
+      
+      line((-2, 1), (-3, -1))
+
+      line((4, 0.5), (2, 1.5))
+
+      line((-3, -1), (-0.25, 0))
+      line((-0.25, 0), (1.25, -1.75))
+      line((4, 0.5), (3.75, -1.5))
+
+      line((1.25, -1.75), (3.75, -1.5))
+      line((4, 0.5), (6, 0.25))
+      line((9, 1), (6, 0.25))
+      line((8, -1.75), (6, 0.25))
+      line((8, -1.75), (9, 1))
+
+
+
+      set-style(stroke: (paint: ocra.darken(30%), thickness: 2pt, dash: none))
+      circle((-2, 1), fill: ocra.lighten(80%), radius: 0.75)   //
+      circle((-3, -1), fill: ocra.lighten(80%), radius: 0.75)
+
+      set-style(stroke: (paint: green.darken(30%), thickness: 2pt, dash: none))
+      circle((2, 1.5), fill: green.lighten(80%), radius: 0.75)
+      circle((-0.25, 0), fill: green.lighten(80%), radius: 0.75) 
+
+      set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 2pt, dash: none))
+      circle((4, 0.5), fill: oxford-blue.lighten(80%), radius: 0.75)   //
+      circle((1.25, -1.75), fill: oxford-blue.lighten(80%), radius: 0.75) //
+      circle((3.75, -1.5), fill: oxford-blue.lighten(80%), radius: 0.75)
+
+      set-style(stroke: (paint: green.darken(30%), thickness: 2pt, dash: none))
+      circle((6, 0.25), fill: green.lighten(80%), radius: 0.75)
+      circle((8, -1.75), fill: green.lighten(80%), radius: 0.75)
+      circle((9, 1), fill: green.lighten(80%), radius: 0.75)
+
+    })
+  ]
 
 #slide(
   title: [Network Decomposition]
 )[
 
-  - A #formal-def[Network Decomposition] groups nodes in *colored clusters*
+  - A #emph[Network Decomposition] groups nodes in *colored clusters*
     - Clusters with the same color are not adjacent
-    - We say it to #formal-def["have diameter"] $d$ if all of its clusters have diameter at most $d$
+    - We say it to #emph[have diameter] $d$ if each cluster has diameter at most $d$
     - It has $c$ colors
+    
+  #v(-16pt)
 
-  // TODO IMMAGINE
+  #network-decomposition
 
 ]
 
 #slide(
   title: [How to use it?]
 )[
-  #idea[Solving MIS in a color will give a correct partial solution]
+  #idea[Solving MIS in a color gives a partial solution]
 
-  - We can iterate this action with @chps17 for all colors
-    - (dropping neighbours of different colors)
+  - We can apply @chps17 for all colors
+    - (dropping MIS neighbours after each iter)
+    - This has complexity $O(c dot d log^2 n)$
+      - If $c = O(log n) = d$ it would be *efficient* 
+  
+  #v(-16pt)
 
-  - This algorithm has complexity $O(c dot d log^2 n)$
-    - If $c = O(log n) = d$ then we would have a MIS algorithm in polylogarithmic time
+  #network-decomposition
 ]
 
 #slide(
   title: "How to compute one?",
 )[
-  // TODO low?
-  - Each color induces a *low diameter clustering*
 
-  #def[A #formal-def[low diameter clustering] $cal("C") subset.eq 2^V$ for a graph $G$ with diameter $d$ is such:]
+  A #emph[low diameter clustering] $cal("C") subset.eq 2^V$ for a graph $G$ with diameter $d$ is such:
   1. $forall C_1 != C_2 in cal("C") : italic("dist")_G (C_1, C_2) >= 2$
-    - #emph["There are no adjacent clusters"]
+    - #emph[There are no adjacent clusters]
   2. $forall C in cal("C") : italic("diam")(G[C]) <= d$
-    - #emph["Any cluster has diameter at most"] $d$
+    - #emph[Any cluster has diameter at most] $d$
 
-  #idea[A clustering #emph[can not be a partitioning]: some nodes have to be left out]
+  #key[A clustering *can not be a partitioning*: some nodes have to be left out]
+]
+
+#slide(
+  title: "How to compute one?",
+)[
 
   Main iteration:
     1. Find a low diameter clustering
     2. Assign a free color to its nodes
     3. Repeat to discarded nodes until there are no more left
 
-  #note[To get a $O(log n)$-colors decomposition, each color has to cluster *at least half* of the uncolored nodes]
+  #let build-nd-1 = scale(70%)[
+    #set align(center)
+
+    #cetz.canvas({
+      import cetz.draw: *
+
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+
+      line((-2, 1), (2, 1.5))
+      
+      line((-2, 1), (-3, -1))
+
+      line((4, 0.5), (2, 1.5))
+
+      line((-3, -1), (-0.25, 0))
+      line((-0.25, 0), (1.25, -1.75))
+      line((4, 0.5), (3.75, -1.5))
+
+      line((1.25, -1.75), (3.75, -1.5))
+      line((4, 0.5), (6, 0.25))
+      line((9, 1), (6, 0.25))
+      line((8, -1.75), (6, 0.25))
+      line((8, -1.75), (9, 1))
+
+      set-style(stroke: (paint: unipd-red.darken(30%), thickness: 2pt, dash: "dashed"))
+      circle((2, 1.5), fill: unipd-red.lighten(80%), radius: 0.75)
+      circle((-0.25, 0), fill: unipd-red.lighten(80%), radius: 0.75) 
+      circle((6, 0.25), fill: unipd-red.lighten(80%), radius: 0.75)
+      circle((8, -1.75), fill: unipd-red.lighten(80%), radius: 0.75)
+      circle((9, 1), fill: unipd-red.lighten(80%), radius: 0.75)
+
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+      // set-style(stroke: (paint: ocra.darken(30%), thickness: 2pt, dash: none))
+      circle((-2, 1), fill: teal.lighten(80%), radius: 0.75)   //
+      circle((-3, -1), fill: teal.lighten(80%), radius: 0.75)
+
+
+      // set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 2pt, dash: none))
+      circle((4, 0.5), fill: teal.lighten(80%), radius: 0.75)   //
+      circle((1.25, -1.75), fill: teal.lighten(80%), radius: 0.75) //
+      circle((3.75, -1.5), fill: teal.lighten(80%), radius: 0.75)
+
+
+    })
+  ]
+  #let build-nd-2 = scale(70%)[
+    #set align(center)
+
+    #cetz.canvas({
+      import cetz.draw: *
+
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+
+      line((-2, 1), (2, 1.5))
+      
+      line((-2, 1), (-3, -1))
+
+      line((4, 0.5), (2, 1.5))
+
+      line((-3, -1), (-0.25, 0))
+      line((-0.25, 0), (1.25, -1.75))
+      line((4, 0.5), (3.75, -1.5))
+
+      line((1.25, -1.75), (3.75, -1.5))
+      line((4, 0.5), (6, 0.25))
+      line((9, 1), (6, 0.25))
+      line((8, -1.75), (6, 0.25))
+      line((8, -1.75), (9, 1))
+
+
+
+      set-style(stroke: (paint: green.darken(30%), thickness: 2pt, dash: none))
+      circle((2, 1.5), fill: green.lighten(80%), radius: 0.75)
+      circle((-0.25, 0), fill: green.lighten(80%), radius: 0.75) 
+      circle((6, 0.25), fill: green.lighten(80%), radius: 0.75)
+      circle((8, -1.75), fill: green.lighten(80%), radius: 0.75)
+      circle((9, 1), fill: green.lighten(80%), radius: 0.75)
+
+      // set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+      set-style(stroke: (paint: unipd-red.darken(30%), thickness: 2pt, dash: "dashed"))
+      circle((-2, 1), fill: unipd-red.lighten(80%), radius: 0.75)   //
+      circle((-3, -1), fill: unipd-red.lighten(80%), radius: 0.75)
+
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+      // set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 2pt, dash: none))
+      circle((4, 0.5), fill: teal.lighten(80%), radius: 0.75)   //
+      circle((1.25, -1.75), fill: teal.lighten(80%), radius: 0.75) //
+      circle((3.75, -1.5), fill: teal.lighten(80%), radius: 0.75)
+
+    })
+  ]
+  #let build-nd-3 = scale(70%)[
+    #set align(center)
+
+    #cetz.canvas({
+      import cetz.draw: *
+
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+
+      line((-2, 1), (2, 1.5))
+      
+      line((-2, 1), (-3, -1))
+
+      line((4, 0.5), (2, 1.5))
+
+      line((-3, -1), (-0.25, 0))
+      line((-0.25, 0), (1.25, -1.75))
+      line((4, 0.5), (3.75, -1.5))
+
+      line((1.25, -1.75), (3.75, -1.5))
+      line((4, 0.5), (6, 0.25))
+      line((9, 1), (6, 0.25))
+      line((8, -1.75), (6, 0.25))
+      line((8, -1.75), (9, 1))
+
+
+
+
+      set-style(stroke: (paint: green.darken(30%), thickness: 2pt, dash: none))
+      circle((2, 1.5), fill: green.lighten(80%), radius: 0.75)
+      circle((-0.25, 0), fill: green.lighten(80%), radius: 0.75) 
+      circle((6, 0.25), fill: green.lighten(80%), radius: 0.75)
+      circle((8, -1.75), fill: green.lighten(80%), radius: 0.75)
+      circle((9, 1), fill: green.lighten(80%), radius: 0.75)
+
+      // set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+      set-style(stroke: (paint: ocra.darken(30%), thickness: 2pt, dash: none))
+      circle((-2, 1), fill: ocra.lighten(80%), radius: 0.75)   //
+      circle((-3, -1), fill: ocra.lighten(80%), radius: 0.75)
+
+      set-style(stroke: (paint: unipd-red.darken(30%), thickness: 2pt, dash: "dashed"))
+      // set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 2pt, dash: none))
+      circle((4, 0.5), fill: unipd-red.lighten(80%), radius: 0.75)   //
+      circle((1.25, -1.75), fill: unipd-red.lighten(80%), radius: 0.75) //
+      circle((3.75, -1.5), fill: unipd-red.lighten(80%), radius: 0.75)
+
+    })
+  ]
+  #let build-nd-4 = scale(70%)[
+    #set align(center)
+
+    #cetz.canvas({
+      import cetz.draw: *
+
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+
+      line((-2, 1), (2, 1.5))
+      
+      line((-2, 1), (-3, -1))
+
+      line((4, 0.5), (2, 1.5))
+
+      line((-3, -1), (-0.25, 0))
+      line((-0.25, 0), (1.25, -1.75))
+      line((4, 0.5), (3.75, -1.5))
+
+      line((1.25, -1.75), (3.75, -1.5))
+      line((4, 0.5), (6, 0.25))
+      line((9, 1), (6, 0.25))
+      line((8, -1.75), (6, 0.25))
+      line((8, -1.75), (9, 1))
+
+
+
+
+      set-style(stroke: (paint: green.darken(30%), thickness: 2pt, dash: none))
+      circle((2, 1.5), fill: green.lighten(80%), radius: 0.75)
+      circle((-0.25, 0), fill: green.lighten(80%), radius: 0.75) 
+      circle((6, 0.25), fill: green.lighten(80%), radius: 0.75)
+      circle((8, -1.75), fill: green.lighten(80%), radius: 0.75)
+      circle((9, 1), fill: green.lighten(80%), radius: 0.75)
+
+      // set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+      set-style(stroke: (paint: ocra.darken(30%), thickness: 2pt, dash: none))
+      circle((-2, 1), fill: ocra.lighten(80%), radius: 0.75)   //
+      circle((-3, -1), fill: ocra.lighten(80%), radius: 0.75)
+
+      set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 2pt, dash: none))
+      // set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 2pt, dash: none))
+      circle((4, 0.5), fill: oxford-blue.lighten(80%), radius: 0.75)   //
+      circle((1.25, -1.75), fill: oxford-blue.lighten(80%), radius: 0.75) //
+      circle((3.75, -1.5), fill: oxford-blue.lighten(80%), radius: 0.75)
+
+    })
+  ]
+
+  #grid(
+    columns: (9fr, 1fr, 9fr),
+    [#v(-40pt); #build-nd-1 #v(-21pt)],
+    [#set align(center); $-->$],
+    [#v(-40pt); #build-nd-2 #v(-21pt)],
+    [ #v(-20pt); #build-nd-3 ],
+    [#set align(center + horizon); $-->$],
+    [ #v(-20pt); #build-nd-4 ],
+  )
+
+  #place(
+    center,
+    dy: -120pt
+  )[
+    #rotate(-20deg)[$<--$]
+  ]
+]
+
+#slide(
+  title: "How to compute one?",
+)[
+  #key[To get a $O(log n)$-colors decomposition, each color has to cluster *at least half* of the uncolored nodes]
+
+  - Otherwise we can end up with too many colors
 
   // TODO proof?
 ]
@@ -601,29 +870,33 @@
 #slide(
   title: "Definitions"
 )[
-  - Our previous definition of diamter is also called #formal-def[strong] diameter
+  - Our previous definition of diamter is also called #emph[strong] diameter
   
-  #def[We say a clustering has #formal-def[weak] diameter when]:
+  We say a clustering has #emph[weak] diameter when:
   1. (unchanged) #faded["There are no adjacent clusters"];
-  2.  "Any cluster has diameter #emph[in $G$] at most" $d$
+  2.  "Any cluster has diameter *in $G$* at most" $d$
 
 ]
 
+#focus-slide[
+  How to compute a low diameter clustering
+]
+
 #slide(
-  title: [Introduction],
+  title: [Today's Algorithm],
   new-section: "Computing a Clustering"
 )[
-  - The main accomplishment of @rhg22 is to provide a straightforward algorithm that:
+  - Main accomplishments of @rhg22:
     - Terminates in $O(log^6 n)$ rounds in the CONGEST model
     - Outputs a clustering with $O(log^3 n)$ colors
-    - The clustering has strong diameter
+    - Directly strong diameter #pause
 
-  - Previously @rg20 provided an algorithm for low diameter clustering with #emph[weak] diameter
+  - Previously @rg20 provided a l.d.c with #emph[weak] diameter
     - $O(log^7 n)$ rounds with $O(log^3 n)$ colors
-    - It's possible to turn it into strong diameter
+    - It's possible to turn it into strong diameter #pause
   
-  - @ehrg22 provided strong diameter in $O(log^4 n)$ rounds with $O(log^3 n)$ colors
-    - Still has to pass by a weak diameter intermediate solution
+  - @ehrg22 did it in $O(log^4 n)$ rounds with $O(log^3 n)$ colors
+    - Has to pass by a weak d. intermediate solution
 ]
 
 #slide(
