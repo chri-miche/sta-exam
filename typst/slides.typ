@@ -12,7 +12,7 @@
 #let darkpurple = rgb("#28112b");
 
 // TODO emph darkpurple in notes and ocra in ideas
-#let emph(body) = text(fill: ocra.darken(30%),weight: "bold")[#body]
+#let emph(body) = text(style: "italic", fill: unipd-red.darken(30%),weight: "bold")["#body"]
 
 #let example(body) = block(
   width: 100%,
@@ -30,7 +30,7 @@
   text(grid(
     columns: (1fr, 10fr, 1fr),
     align(left, "🚨"),
-    align(center, body),
+    align(center, text(fill: unipd-red.darken(30%), weight: "medium")[#body]),
     align(right, "")
   )),
 )
@@ -43,7 +43,7 @@
   text(grid(
     columns: (1fr, 10fr, 1fr),
     align(left, "🎶"),
-    align(center, body),
+    align(center, text(fill: oxford-blue, weight: "medium")[#body]),
     align(right, "")
   )),
 )
@@ -56,7 +56,7 @@
   text(grid(
     columns: (1fr, 10fr, 1fr),
     align(left, "💡"),
-    align(center, body),
+    align(center, text(fill: ocra.darken(95%), weight: 400)[#body]),
     align(right, "")
   )),
 )
@@ -71,7 +71,7 @@
   text(grid(
     columns: (1fr, 10fr, 1fr),
     align(left, ""),
-    align(center, body),
+    align(center, text(fill: oxford-blue, weight: "medium")[#body]),
     align(right, "")
   )),
 )
@@ -106,7 +106,7 @@
   // "EB Garamond",
   "Marianne",
   "Noto Color Emoji",
-), weight: "light", size: 30pt)
+), weight: "regular", size: 26pt)
 
 #show raw: set text(size: 1.1em)
 #show smallcaps: set text(font: "EB Garamond SC 12")
@@ -119,60 +119,190 @@
 // pannellone "What are we talking about?"
 
 #slide(
-  title: [About This Presentation]
+  title: [About this Presentation]
 )[
   #polylux-outline(padding: 0.5em, enum-args: (tight: false))
 ]
 
 #slide(
   title: "Intuition",
-  new-section: "Models"
+  new-section: "Distributed Algorithms"
 )[
-  Some graph problems are interesting for #emph("networks of computers")
-
-  #key[$"Distribution" => "Parallelism"$]
+  - We want to solve graph problems on *networks*
+    - Computers are like nodes in a graph
   
+  #key[Distribution $=>$ Multiple processors]
+
   #pause
 
-  #idea[We'd like to leverage parallelism to relieve computation costs]
+  #idea[Each node gives a partial solution]
+  
+  - At the end they are all combined altogether
+]
+
+#slide(
+  title: "Intuition"
+)[
+
+  ...how can we combine those partial solutions?
+
+  #warning[Distribution $=>$ Collaboration]
+
+  - Arcs are *direct links* between computers
+   - Computers have to exchange *messages*
+  
 ]
 
 #slide(
   title: "A First Simple Model"
 )[
 
-  #set align(center)
-  #cetz.canvas({
-    import cetz.draw: *
+  #let right-content = [
 
-    set-style(stroke: (paint: teal.darken(30%), thickness: 2pt))
+    #set align(center + horizon)
+    #cetz.canvas({
+      import cetz.draw: *
 
-    line((-1.5, 0), (0, 0))
-    line((-1.5, 0), (-3, 0), stroke: (dash: "dashed"))
-    circle((-3, 0), fill: teal.lighten(80%), radius: 0.75, stroke: (dash: "dashed"))
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt))
+      set-style(content: (frame: "rect", stroke: none, fill: white))
 
-    line((1, 1), (0, 0))
-    line((1, 1), (2, 2), stroke: (dash: "dashed"))
-    circle((2, 2), fill: teal.lighten(80%), radius: 0.75, stroke: (dash: "dashed"))
 
-    line((-1, 1), (0, 0))
-    line((-1, 1), (-2, 2), stroke: (dash: "dashed"))
-    circle((-2, 2), fill: teal.lighten(80%), radius: 0.75, stroke: (dash: "dashed"))
+      line((-1.5, 0), (0, 0))
+      line((-1.5, 0), (-3, 0), stroke: (dash: "dashed"))
+      circle((-3, 0), fill: teal.lighten(80%), radius: 0.75, stroke: (dash: "dashed"))
 
-    circle((0, 0), fill: teal.lighten(80%), radius: 0.75)    
-  })
+      line((1, 1), (0, 0))
+      line((1, 1), (2, 2), stroke: (dash: "dashed"))
+      circle((2, 2), fill: teal.lighten(80%), radius: 0.75, stroke: (dash: "dashed"))
 
-  #set align(left)
+      line((-1, 1), (0, 0))
+      line((-1, 1), (-2, 2), stroke: (dash: "dashed"))
+      circle((-2, 2), fill: teal.lighten(80%), radius: 0.75, stroke: (dash: "dashed"))
 
-  - In the *PN-Network* a node only knows some _Numbered *Ports*_
-   - Each connected with a *different* node
-   - #def[Those are called #formal-def[neighbours]]
-   - There are no *self loops*
+      circle((0, 0), fill: teal.lighten(80%), radius: 0.75, name: "node")  
+      content("node.north-east", [#set text(size: 17pt, fill: teal.darken(50%), weight: "bold"); 1], anchor: "south-west")   
+      content("node.north-west", [#set text(size: 17pt, fill: teal.darken(50%), weight: "bold"); 2], anchor: "south-east") 
+      content("node.west", [#set text(size: 17pt, fill: teal.darken(50%), weight: "bold"); 3], anchor: "east")  
+    })
+  ]
 
-  #warning[From the perspective of a single node, we don't see the whole topology]
+  #let left-content = [
+
+    - In the *PN-Network* a node only knows some _Numbered Ports_
+      - Connected with a *different* nodes
+        - Such nodes are called #emph[neighbours]
+    - There are no *self loops*
+  ]
+
+  #grid(
+    columns: (2fr, 1fr),
+    left-content,
+    right-content
+  )
+
+  #warning[A node can't see the whole topology]
 
   // this is going to raise some problems, lets see which!
 ]
+
+#slide(title: "The PN-Network")[
+
+  #warning[All nodes appear identical]
+
+  - The only difference _could be_ in the total number of ports
+    - Not enough!
+
+  - *We must break this symmetry*
+]
+
+#slide(
+  title: [The LOCAL Model]
+)[
+  #idea[We add *unique identifiers* to the nodes]
+
+  #set align(center)
+  $italic(id) : V -> NN$
+
+  $"where" forall v in V : italic(id)(v) <= n^c "for some" c >= 1$
+
+  #set align(left)
+
+  // we don't want to [limitare] the pool of indentifiers too much, but we want at least an upper bound
+
+  #key[We choose $n^c$ so that we need $O(log n)$ bits to represent an identifier, i.e. identifiers are reasonably #emph[small]]
+
+  // so this seems enough for the model
+  // but we need to define how communication works
+]
+
+
+#slide(
+  title: "Communication (Intuition)"
+)[
+  - Collaborating requires *exchanging messages*
+   - ...on a medium that is *slow* and *unreliable*
+
+  //  Our aim is to study algorithms that execute in a distributed environment
+  #warning[$=>$ Communication is the main pitfall]
+
+  - We are intersted in *quantifying* the number of messages that algorithms need
+    - An #emph[efficient] algorithm will need few messages
+]
+
+#slide(
+  title: "Communication Model",
+)[
+
+  W.l.o.g.#footnote[Without loss of generality.] we adopt a model of #emph[synchronous communication]
+
+  // why? so that we can quantify easier the ceiling / "worst case" of the number of message sent in the network
+
+  Each round, a node $v in V$ performs this actions:
+  1. $v$ #emph[sends] a message $italic("msg") in NN$ to its neighbours;
+  2. $v$ #emph[receives] messages from its neighbours;
+  3. ...
+
+  - (1.) and (2.) establish a #emph[communication round]
+    - Main measure of complexity
+]
+
+#slide(
+  title: "Communication Model",
+)[
+  3. $v$ #emph[executes locally] some algorithm (same for each node).
+    - A node can #emph[stop] in this phase
+  
+  #note[(3.) doesn't affect the algorithm's complexity]
+  // we are interested in capture the complexity that is upon the network
+
+  - When all nodes *stopped* the algorithm terminates
+]
+
+/*
+#slide(
+  title: "Distributed Algorithms"
+)[
+  - This seems enough for the model
+  - We must now define:
+    - What *"distributed"* algorithms consist of
+    - And the criteria for *complexity* analysis
+]
+*/
+
+#slide(
+  title: [A First Example (#smallcaps("Wave"))]
+)[
+
+  - The node with $id(v) = 1$ _"waves hello"_ to neighbours
+    - ...sending them a message
+  // doing stuff based on id is enough to break symmetry
+  
+  - When a node receives the message, *forwards* it to its neighbours
+    - And then *stops*
+
+ -  The running time of this algorithm on a graph $G$ is $O(italic("diam")(G))$
+]
+
 
 #slide(
   title: "Centralized Graph Problems"
@@ -216,113 +346,22 @@
 
   #set align(left)
 
-  Solving it centralized is an easy greedy algorithm
-]
-
-#slide(title: "The PN-Network")[
-
-  #warning[Each node appears identical to any other]
-
-  - The only difference _could be_ in the number of ports
-    - Not enough!
-
-  - *We must break this symmetry*
+  - Solving it #emph[centralized] is easy
+  - How can we solve it #emph[distributed]?
 ]
 
 #slide(
-  title: [The LOCAL Model]
+  title: [A Second Example (#smallcaps("Naive-MIS"))]
 )[
-  #idea[We add *unique identifiers* to the nodes]
-
-  #set align(center)
-  $italic(id) : V -> NN$
-
-  $"where" forall v in V : italic(id)(v) <= n^c "for some" c >= 1$
-
-  #set align(left)
-
-  // we don't want to [limitare] the pool of indentifiers too much, but we want at least an upper bound
-
-  #note[We choose $n^c$ so that we need $O(log n)$ bits to represent an identifier, i.e. identifiers are reasonably #formal-def[small]]
-
-  // so this seems enough for the model
-  // but we need to define how communication works
-]
-
-#slide(
-  title: "Distributed Algorithms"
-)[
-  - This seems enough for the model
-  - We must now define:
-    - What *"distributed"* algorithms consist of
-    - And the criteria for *complexity* analysis
-]
-
-#slide(
-  title: "Distributed Algorithms"
-)[
-  #warning($"Distribution" => "Collaboration"$)
-
-  - Collaborating requires *exchanging messages*
-   - ...on a medium that is *slow* and *unreliable*
-
-  //  Our aim is to study algorithms that execute in a distributed environment
-  #key[$=>$ Communication has the most impact on complexity]
-
-  $=>$ We are intersted in *quantifying* the number of messages that travel across the network
-]
-
-#slide(
-  title: "Communication",
-)[
-
-  W.l.o.g.#footnote[Without loss of generality.] we adopt a model of #emph[synchronous communication]
-
-  // why? so that we can quantify easier the ceiling / "worst case" of the number of message sent in the network
-
-  Each round, a node $v in V$ performs this actions:
-  1. $v$ #emph[sends] a message $italic("msg") in NN$ to its neighbours;
-  2. $v$ #emph[receives] messages from its neighbours;
-  3. ...
-]
-
-#slide(
-  title: "Communication",
-)[
-  3. $v$ #emph[executes locally] some algorithm (same for each node).
-  
-  #def[Any message exchange establishes a communication #formal-def[round]]
-
-  #note[Point (3.) doesn't affect the algorithm's complexity]
-  // we are interested in capture the complexity that is upon the network
-]
-
-#slide(
-  title: [A First Example (#smallcaps("Wave"))]
-)[
-
-  In #smallcaps("Wave"), the node with $id(v) = 1$ _"waves hello"_
-  // doing stuff based on id is enough to break symmetry
-  
-  When a node receives the message, forwards it to its neighbours
-
-  // Each communication round can take a significant amount of time to happen
-
-  // #key[Complexity is measured in #emph[rounds]]
-
-  The running time of this algorithm on a graph $G$ is $O(italic("diam")(G))$
-]
-
-#slide(
-  title: [A Second Example (#smallcaps("Naive MIS"))]
-)[
-  #idea[Let's leverage $id$ to select the first MIS node]
+  #idea[Let's leverage $id(v)$ to select the next MIS node]
   
   - At round \#$i$, node $v : id(v) = i$ executes
     - If no neighbour is in the MIS, add the node
       - And inform the neighbours
     - Otherwise, the node is outside the MIS
 
+  
+  /*
   #algorithm({
     import algorithmic: *
     ast_to_content_list(1, {
@@ -344,6 +383,7 @@
       )
     })
   })
+  */
 
   - It is correct since no node has the same $id$
   - This algorithm runs in $O(n^c)$ (the maximum $id$)
@@ -354,24 +394,31 @@
 #slide(
   title: "Gathering All"
 )[
-  We can be way smarter than that
 
   #idea[Running a centralized algorithm on a single node would take O(1) rounds]
   // minimizes number of messages in the net
 
   - We'd like to run a MIS algorithm on each node
-    - *Centralized* $=>$ each node must have a *local copy* of the *entire* graph
+    - Each must have a *local copy* of the *entire* graph
+    - The algorithm must be deterministic
+      - When a node stops it checks if it is included in MIS
+]
+
+#slide(
+  title: "Gathering All"
+)[
 
   - The algorithm #smallcaps[Gather-All] makes all nodes build a local copy of the whole graph
     - At round $i$, each node $v$ knows $italic("ball")(i, v)$
-
-
   
   #let left-content = [
     #set align(center)
 
     #set text(fill: ocra.darken(30%), size: 24pt)
     $italic("ball")(0, v)$
+
+    #v(-32pt)
+
     #scale(75%)[
     #cetz.canvas({
       import cetz.draw: *
@@ -412,6 +459,8 @@
     #set text(fill: ocra.darken(30%), size: 24pt)
     $italic("ball")(1, v)$
 
+    #v(-32pt)
+
     #scale(75%)[
     #cetz.canvas({
       import cetz.draw: *
@@ -449,6 +498,8 @@
   ]
 
   #side-by-side(left-content, right-content)
+  
+  #v(-32pt)
 
   - All nodes will know the whole graph after $O(italic("diam")(G))$ rounds
 ]
@@ -456,10 +507,14 @@
 #slide(
   title: [Critique to LOCAL]
 )[
-  #warning[Graph can be really large]
-  - In a real world setting, it is not always possible to send arbitrary large messages
-  - We'd like to lift this assumption
-    - Messages need to be reasonably #formal-def[small]
+  - #smallcaps[Gather-All] assumes that messages size is *unbounded*
+
+  #warning[Requires to send the whole graph in one message]
+  - It is not always possible to send arbitrary large messages
+    - Heavy ones may be "sharded"
+  - We provide an upper bound for message size
+    - Messages need to be reasonably #emph[small]
+    - Large messages will require more rounds to be sent
 ]
 
 #slide(
@@ -467,18 +522,22 @@
 )[
   // In real world scenario, we can't send messages on networks that are too big without incurring in performance penalties
 
-  - We provide an upper bound on messages size
-    - Messages larger than will require more rounds to be fully sent
+  
 
-  #key[In the CONGEST model, messages can only be in the size of $O(log n)$]
+  #key[In the CONGEST model, messages size has to be $O(log n)$]
 
-  #emph[Examples:]
-  - Sending a single (or a constant amount of) identifier takes $O(1)$ rounds
+  - Sending $k$ identifiers takes $O(1)$ rounds
   - Sending a _set_ of identifiers can take up to $O(n)$
   - Sending the whole graph requires $O(n^2)$ rounds:
-    - The adjacency matrix alone reaches that
+    - The adjacency matrix suffices...
 
-  #key[$=>$ We can't use #smallcaps[Gather-All] in the CONGEST model]
+  #warning[$=>$ We can't use #smallcaps[Gather-All] in the CONGEST model]
+]
+
+#focus-slide[
+  We've established our computation model
+
+  Now we'll see how to solve problems in CONGEST
 ]
 
 #slide(
