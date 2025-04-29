@@ -11,7 +11,6 @@
 // no need for claret, use unipd-red instead #let claret     = rgb("#990d35");
 #let darkpurple = rgb("#28112b");
 
-// TODO emph darkpurple in notes and ocra in ideas
 #let emph(body) = text(style: "italic", fill: unipd-red.darken(30%),weight: "bold")[#body]
 
 #let polylog-hint(body) = text(style: "italic", fill: oxford-blue, weight: "bold")["#body"]
@@ -63,7 +62,6 @@
   )),
 )
 
-// todo background magari giallo..?
 // key concept
 #let key(body) = block(
   width: 100%,
@@ -96,7 +94,6 @@
 #let faded(body) = text(fill: rgb("#999999"), weight: "bold")[#body]
 
 // todo background
-#let def(body) = [#formal-def[def:] #body]
 
 // #let today = datetime.today().display("[day]/[month]/[year]")
 
@@ -633,7 +630,7 @@
   - We can apply @chps17 for all colors
     - (dropping MIS neighbours after each iter)
     - This has complexity $O(c dot d log^2 n)$
-      - If $c = O(log n) = d$ it would be *efficient* 
+      - If $c = O(log n) = d$ it would be #polylog-hint[efficient] 
   
   #v(-16pt)
 
@@ -899,22 +896,22 @@
     })
   ]
 
-  #grid(
-    columns: (9fr, 1fr, 9fr),
-    [#v(-40pt); #build-nd-1 #v(-21pt)],
-    [#set align(center); $-->$],
-    [#v(-40pt); #build-nd-2 #v(-21pt)],
-    [ #v(-20pt); #build-nd-3 ],
-    [#set align(center + horizon); $-->$],
-    [ #v(-20pt); #build-nd-4 ],
-  )
-
-  #place(
+  #let left-arrow-incl = place(
     center,
-    dy: -120pt
+    dx: 200pt
   )[
     #rotate(-20deg)[$<--$]
   ]
+
+  #grid(
+    columns: (9fr, 1fr, 9fr),
+    [#v(-40pt); #build-nd-1 #v(-21pt) #pause],
+    [#set align(center); $-->$],
+    [#v(-40pt); #build-nd-2 #v(-21pt) #pause],
+    [ #left-arrow-incl #v(-20pt); #build-nd-3 #pause],
+    [#set align(center + horizon); $-->$],
+    [ #v(-20pt); #build-nd-4 ],
+  )
 ]
 
 /*
@@ -975,6 +972,229 @@
     - Required for #polylog-hint[few] colors *network decompositions*
 ]
 
+
+
+#let forest-1 = scale(75%)[
+  #set align(center)
+
+  #cetz.canvas({
+    import cetz.draw: *
+
+    set-style(stroke: (paint: gray.darken(30%), thickness: 2pt, dash: none))
+
+    line((-2, 1), (2, 1.5))
+    
+    line((-2, 1), (-3, -1))
+
+    line((4, 0.5), (2, 1.5))
+
+    line((-3, -1), (-0.25, 0))
+    line((-0.25, 0), (1.25, -1.75))
+    line((4, 0.5), (3.75, -1.5))
+
+    line((1.25, -1.75), (3.75, -1.5))
+    line((4, 0.5), (6, 0.25))
+    line((9, 1), (6, 0.25))
+    line((8, -1.75), (6, 0.25))
+    line((8, -1.75), (9, 1))
+
+    set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 4pt, dash: none))
+    circle((-0.25, 0), fill: oxford-blue.lighten(80%), radius: 0.75) 
+
+
+    set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 2pt, dash: none))
+
+    circle((2, 1.5), fill: oxford-blue.lighten(80%), radius: 0.75)
+    
+    // set-style(stroke: (paint: ocra.darken(30%), thickness: 2pt, dash: none))
+    circle((-2, 1), fill: oxford-blue.lighten(80%), radius: 0.75)   //
+    circle((-3, -1), fill: oxford-blue.lighten(80%), radius: 0.75)
+
+
+    // set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 2pt, dash: none))
+    circle((4, 0.5), fill: oxford-blue.lighten(80%), radius: 0.75)   //
+    circle((1.25, -1.75), fill: oxford-blue.lighten(80%), radius: 0.75) //
+    circle((3.75, -1.5), fill: oxford-blue.lighten(80%), radius: 0.75)
+
+    set-style(stroke: (paint: unipd-red.darken(30%), thickness: 2pt, dash: none))
+    circle((6, 0.25), fill: unipd-red.lighten(80%), radius: 0.75)
+    circle((8, -1.75), fill: unipd-red.lighten(80%), radius: 0.75)
+    set-style(stroke: (paint: unipd-red.darken(30%), thickness: 4pt, dash: none))
+    circle((9, 1), fill: unipd-red.lighten(80%), radius: 0.75)
+
+  })
+]
+
+#let forest-2 = scale(75%)[
+  #set align(center)
+
+  #cetz.canvas({
+    import cetz.draw: *
+
+    set-style(stroke: (paint: gray.darken(30%), thickness: 2pt, dash: none))
+
+    line((-2, 1), (2, 1.5))
+    
+    line((-2, 1), (-3, -1))
+
+    line((4, 0.5), (2, 1.5))
+
+    line((-3, -1), (-0.25, 0))
+    line((-0.25, 0), (1.25, -1.75))
+    line((4, 0.5), (3.75, -1.5))
+
+    line((1.25, -1.75), (3.75, -1.5))
+    line((4, 0.5), (6, 0.25))
+    line((9, 1), (6, 0.25))
+    line((8, -1.75), (6, 0.25))
+    line((8, -1.75), (9, 1))
+
+    set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 4pt, dash: none))
+    circle((-0.25, 0), fill: oxford-blue.lighten(80%), radius: 0.75) 
+
+
+    set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 2pt, dash: none))
+
+    circle((2, 1.5), fill: oxford-blue.lighten(80%), radius: 0.75)
+    
+    // set-style(stroke: (paint: ocra.darken(30%), thickness: 2pt, dash: none))
+    circle((-2, 1), fill: oxford-blue.lighten(80%), radius: 0.75)   //
+    circle((-3, -1), fill: oxford-blue.lighten(80%), radius: 0.75)
+
+
+    // set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 2pt, dash: none))
+    circle((1.25, -1.75), fill: oxford-blue.lighten(80%), radius: 0.75) //
+    circle((3.75, -1.5), fill: oxford-blue.lighten(80%), radius: 0.75)
+
+    set-style(stroke: (paint: unipd-red.darken(30%), thickness: 2pt, dash: none))
+    circle((4, 0.5), fill: unipd-red.lighten(80%), radius: 0.75)   //
+    circle((6, 0.25), fill: unipd-red.lighten(80%), radius: 0.75)
+    circle((8, -1.75), fill: unipd-red.lighten(80%), radius: 0.75)
+    set-style(stroke: (paint: unipd-red.darken(30%), thickness: 4pt, dash: none))
+    circle((9, 1), fill: unipd-red.lighten(80%), radius: 0.75)
+
+  })
+]
+
+
+#let forest-3 = scale(75%)[
+  #set align(center)
+
+  #cetz.canvas({
+    import cetz.draw: *
+
+    set-style(stroke: (paint: gray.darken(30%), thickness: 2pt, dash: none))
+
+    line((-2, 1), (2, 1.5))
+    
+    line((-2, 1), (-3, -1))
+
+    line((4, 0.5), (2, 1.5))
+
+    line((-3, -1), (-0.25, 0))
+    line((-0.25, 0), (1.25, -1.75))
+    line((4, 0.5), (3.75, -1.5))
+
+    line((1.25, -1.75), (3.75, -1.5))
+    line((4, 0.5), (6, 0.25))
+    line((9, 1), (6, 0.25))
+    line((8, -1.75), (6, 0.25))
+    line((8, -1.75), (9, 1))
+
+    set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 4pt, dash: none))
+    circle((-0.25, 0), fill: oxford-blue.lighten(80%), radius: 0.75) 
+
+
+    set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 2pt, dash: none))
+
+    
+    // set-style(stroke: (paint: ocra.darken(30%), thickness: 2pt, dash: none))
+    circle((-2, 1), fill: oxford-blue.lighten(80%), radius: 0.75)   //
+    circle((-3, -1), fill: oxford-blue.lighten(80%), radius: 0.75)
+    circle((1.25, -1.75), fill: oxford-blue.lighten(80%), radius: 0.75) //
+    
+
+    // set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 2pt, dash: none))
+    
+    set-style(stroke: (paint: unipd-red.darken(30%), thickness: 2pt, dash: none))
+    circle((2, 1.5), fill: unipd-red.lighten(80%), radius: 0.75)
+    circle((4, 0.5), fill: unipd-red.lighten(80%), radius: 0.75)   //
+    circle((3.75, -1.5), fill: unipd-red.lighten(80%), radius: 0.75)
+    circle((6, 0.25), fill: unipd-red.lighten(80%), radius: 0.75)
+    circle((8, -1.75), fill: unipd-red.lighten(80%), radius: 0.75)
+    set-style(stroke: (paint: unipd-red.darken(30%), thickness: 4pt, dash: none))
+    circle((9, 1), fill: unipd-red.lighten(80%), radius: 0.75)
+
+  })
+]
+
+
+#let forest-4 = scale(75%)[
+  #set align(center)
+
+  #cetz.canvas({
+    import cetz.draw: *
+
+    set-style(stroke: (paint: gray.darken(30%), thickness: 2pt, dash: none))
+
+    line((-2, 1), (2, 1.5))
+    
+    line((-2, 1), (-3, -1))
+
+    line((4, 0.5), (2, 1.5))
+
+    line((-3, -1), (-0.25, 0))
+    line((-0.25, 0), (1.25, -1.75))
+    line((4, 0.5), (3.75, -1.5))
+
+    line((1.25, -1.75), (3.75, -1.5))
+    line((4, 0.5), (6, 0.25))
+    line((9, 1), (6, 0.25))
+    line((8, -1.75), (6, 0.25))
+    line((8, -1.75), (9, 1))
+
+    set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 4pt, dash: none))
+    circle((-0.25, 0), fill: oxford-blue.lighten(80%), radius: 0.75) 
+
+
+    set-style(stroke: (paint: oxford-blue.darken(30%), thickness: 2pt, dash: none))
+
+    
+    // set-style(stroke: (paint: ocra.darken(30%), thickness: 2pt, dash: none))
+    circle((-3, -1), fill: oxford-blue.lighten(80%), radius: 0.75)
+    
+
+    set-style(stroke: (paint: gray.darken(30%), thickness: 2pt, dash: none))
+    circle((-2, 1), fill: gray.lighten(80%), radius: 0.75)   //
+    circle((1.25, -1.75), fill: gray.lighten(80%), radius: 0.75) //
+
+
+    set-style(stroke: (paint: unipd-red.darken(30%), thickness: 2pt, dash: none))
+    circle((2, 1.5), fill: unipd-red.lighten(80%), radius: 0.75)
+    circle((4, 0.5), fill: unipd-red.lighten(80%), radius: 0.75)   //
+    circle((3.75, -1.5), fill: unipd-red.lighten(80%), radius: 0.75)
+    circle((6, 0.25), fill: unipd-red.lighten(80%), radius: 0.75)
+    circle((8, -1.75), fill: unipd-red.lighten(80%), radius: 0.75)
+    set-style(stroke: (paint: unipd-red.darken(30%), thickness: 4pt, dash: none))
+    circle((9, 1), fill: unipd-red.lighten(80%), radius: 0.75)
+
+  })
+]
+
+#slide(
+  title: [Visual Hint]
+)[
+  #set align(center)
+  #grid(
+    columns: (1fr, 1fr),
+    [#forest-1 #pause],
+    [#forest-2 #pause],
+    [#forest-3 #pause],
+    [#forest-4]
+  )
+  
+]
+
 #slide(
   title: [Algorithm Outline]
 )[
@@ -1004,9 +1224,6 @@
   - $Q_(i+1)$ is "_closer_" than $Q_i$ to any node
     - $Q_b$ is #formal-def[close] to any node
 
-// TODO valutare un colore per efficient, close, small...
-
-// TODO nomenclatura nodi: living vs dead / active vs inactive ... scegliere e usare unificata
 ]
 
 #slide(title: [Algorithm Outline (informal)])[
@@ -1038,9 +1255,9 @@
 #slide(
   title: [Phase Invariants $forall i in [0..b]$]
 )[
-  2. let $q_1, q_2 in Q_i$ s.t. they are in the same c.c in $G[V_i]$. \ Then $id(q_1)[0..i] = id(q_2)[0..i]$
-    - for $i = 0$ it's trivially true
-    - for $i = b$ there is $<= 1$ terminal in each c.c.
+  2. Let $q_1, q_2 in Q_i$ s.t. they are in the same c.c in $G[V_i]$. \ Then $id(q_1)[0..i] = id(q_2)[0..i]$
+    - For $i = 0$ it's trivially true
+    - For $i = b$ there is $<= 1$ terminal in each c.c.
   
   #key[Along with invariant (1.), it means that each c.c. has polylog diameter! ]
 ]
@@ -1058,13 +1275,14 @@
 #slide(
   title: [Phase Outline]
 )[
-  *Objective:* Keeping only terminals from which is possible to build a *forest* whose *trees* have polylog diameter
-  - Leaves of the trees may be connected in $G$
-  // TODO immagine
+  *Objective:* In a c.c. remove from $Q_i$ all terminals with same $id(v)$ prefix except one
+    - Keep c.c. #polylog-hint[small]
+    - Divide it if not possible by removing nodes
+  
 
   *Outline:*
   - $2b^2$ #emph[steps], each computing a forest
-  - resulting into a sequence of forests $F_0 .. F_(2b^2)$
+  - Resulting into a sequence of forests $F_0 .. F_(2b^2)$
 ]
 
 // per lavorare: apri con vscode il file (anche da fuori nix-shell)
@@ -1073,16 +1291,21 @@
 //                 , lanciare nix-shell
 //                 , lanciare typst watch slides.typ 
 
+#let red-node = highlight(fill: rgb("#c10007"))[#text(fill: white, weight: 700)[` red `]]
+#let blue-node = highlight(fill: oxford-blue)[#text(fill: white, weight: 700)[` blue `]]
+
 #slide(
   title: [Step Outline]
 )[
   *Inductive definition:*
   - $F_0$ is a BFS forest with roots set $Q_i$
-  - let $T$ be any tree in $F_j$ and $r$ its root
-    - if $id(r)[i] = 0$ the whole tree is `red`, otherwise `blue`
-      - `red` vertexes stay `red`
-      - some `blue` nodes stay `blue`
-      - some others #emph[propose] to join `red` trees
+  - Let $T$ be any tree in $F_j$ and $r$ its root
+    - If $id(r)[i] = 0$ the whole tree is #red-node, otherwise #blue-node
+      - #red-node vertexes stay #red-node
+      - Some #blue-node nodes stay #blue-node
+      - Some others #emph[propose] #red-node trees to join
+        - If accepted, the become #red-node
+        - Otherwise, they are *deleted*
 ]
 
 #slide(
@@ -1090,11 +1313,11 @@
 )[
   #emph[Proposal]:
 
-  $v in V_j^italic("propose") <=> & v "is " #text[`blue`] \
+  $v in V_j^italic("propose") <=> & v "is " #text[#blue-node] \
   and & v "is the only one in " italic("path")(v, italic("root")(v)) \ 
-  & "that neighbours a " #text[`red`] " node"$
+  & "that neighbours a " #text[#red-node] " node"$
 
-  - Define $T_v$ the (`blue`) subtree rooted at $v$
+  - Define $T_v$ the (#blue-node) subtree rooted at $v$
 
   #key[$v$ is the only node in $T_v$ that is also in $V_j^italic("propose")$]
 ]
@@ -1104,17 +1327,18 @@
 )[
   #emph[Proposal]:
 
-  - Each node in $V_j^italic("propose")$ proposes to an arbitrary `red` neighbour
-  - Each `red` tree decides to grow or not
+  - Each node in $V_j^italic("propose")$ proposes to a #red-node neighbour
+  - Each #red-node tree decides to grow or not
     - If it grows, it accepts all proposing subtrees
-    - If not, all proposing subtrees are frozen
+      - #blue-node nodes become #red-node
+    - If not, all proposing subtrees are *deleted*
   - *Criteria*: it decides to grow if gains at least $frac(|V(T)|, 2b)$ nodes
 ]
 
 #slide(
   title: [Observations]
 )[
-  #note[If a `red` tree doesn't decide to grow, it will neighbour `red` nodes only]
+  #note[If a #red-node tree doesn't decide to grow, it will neighbour #red-node nodes only]
 
   - This means it will be able to delete nodes only once in the whole phase // (i.e. among all $2b^2$ steps)
     #list(
