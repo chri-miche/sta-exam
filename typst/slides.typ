@@ -12,7 +12,9 @@
 #let darkpurple = rgb("#28112b");
 
 // TODO emph darkpurple in notes and ocra in ideas
-#let emph(body) = text(style: "italic", fill: unipd-red.darken(30%),weight: "bold")["#body"]
+#let emph(body) = text(style: "italic", fill: unipd-red.darken(30%),weight: "bold")[#body]
+
+#let polylog-hint(body) = text(style: "italic", fill: oxford-blue, weight: "bold")["#body"]
 
 #let example(body) = block(
   width: 100%,
@@ -198,22 +200,23 @@
     columns: (2fr, 1fr),
     left-content,
     right-content
-  )
+  ) #pause
 
   #warning[A node can't see the whole topology]
-
-  // this is going to raise some problems, lets see which!
+  #pause
+  
+  #warning[All nodes appear identical]
 ]
 
+/*
 #slide(title: "The PN-Network")[
-
-  #warning[All nodes appear identical]
 
   - The only difference _could be_ in the total number of ports
     - Not enough!
 
   - *We must break this symmetry*
 ]
+*/
 
 #slide(
   title: [The LOCAL Model]
@@ -229,7 +232,7 @@
 
   // we don't want to [limitare] the pool of indentifiers too much, but we want at least an upper bound
 
-  #key[We choose $n^c$ so that we need $O(log n)$ bits to represent an identifier, i.e. identifiers are reasonably #emph[small]]
+  #key[We choose $n^c$ so that we need $O(log n)$ bits to represent an identifier, i.e. identifiers are reasonably #polylog-hint[small]]
 
   // so this seems enough for the model
   // but we need to define how communication works
@@ -239,14 +242,14 @@
 #slide(
   title: "Communication (Intuition)"
 )[
-  - Collaborating requires *exchanging messages*
+  - Collaboration requires *exchanging messages*
    - ...on a medium that is *slow* and *unreliable*
 
   //  Our aim is to study algorithms that execute in a distributed environment
   #warning[$=>$ Communication is the main pitfall]
 
-  - We are intersted in *quantifying* the number of messages that algorithms need
-    - An #emph[efficient] algorithm will need few messages
+  - We *measure* the number of messages that an algorithm requires
+    - An #polylog-hint[efficient] algorithm will need few messages
 ]
 
 #slide(
@@ -257,13 +260,14 @@
 
   // why? so that we can quantify easier the ceiling / "worst case" of the number of message sent in the network
 
-  Each round, a node $v in V$ performs this actions:
+  Each round, a node $v in V$ performs these actions:
   1. $v$ #emph[sends] a message $italic("msg") in NN$ to its neighbours;
   2. $v$ #emph[receives] messages from its neighbours;
-  3. ...
+  3. ... #pause
 
   - (1.) and (2.) establish a #emph[communication round]
     - Main measure of complexity
+    - Few communication rounds $=>$ few messages
 ]
 
 #slide(
@@ -271,11 +275,14 @@
 )[
   3. $v$ #emph[executes locally] some algorithm (same for each node).
     - A node can #emph[stop] in this phase
+      - Its local result won't change anymore
   
-  #note[(3.) doesn't affect the algorithm's complexity]
+  #note[(3.) doesn't affect the algorithm's complexity] #pause
   // we are interested in capture the complexity that is upon the network
 
   - When all nodes *stopped* the algorithm terminates
+
+  #key[We say that an algorithm is #polylog-hint[efficient] when it stops in #text(fill: oxford-blue, weight: 700)[polylogarithmic] number of rounds]
 ]
 
 /*
@@ -294,11 +301,11 @@
 )[
 
   - The node with $id(v) = 1$ _"waves hello"_ to neighbours
-    - ...sending them a message
+    - ...sending them a message #pause
   // doing stuff based on id is enough to break symmetry
   
   - When a node receives the message, *forwards* it to its neighbours
-    - And then *stops*
+    - And then *stops* #pause
 
  -  The running time of this algorithm on a graph $G$ is $O(italic("diam")(G))$
 ]
@@ -358,7 +365,7 @@
   - At round \#$i$, node $v : id(v) = i$ executes
     - If no neighbour is in the MIS, add the node
       - And inform the neighbours
-    - Otherwise, the node is outside the MIS
+    - Otherwise, the node is outside the MIS #pause
 
   
   /*
@@ -513,7 +520,7 @@
   - It is not always possible to send arbitrary large messages
     - Heavy ones may be "sharded"
   - We provide an upper bound for message size
-    - Messages need to be reasonably #emph[small]
+    - Messages need to be reasonably #polylog-hint[small]
     - Large messages will require more rounds to be sent
 ]
 
@@ -535,9 +542,11 @@
 ]
 
 #focus-slide[
-  We've established our computation model
+  // We've established our computation model
 
-  Now we'll see how to solve problems in CONGEST
+  // Now we'll see how to solve problems in CONGEST
+
+  Solving problems in CONGEST
 ]
 
 #slide(
@@ -631,17 +640,68 @@
   #network-decomposition
 ]
 
+#let low-diameter-clustering = [
+    #set align(center)
+
+    #cetz.canvas({
+      import cetz.draw: *
+
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+
+      line((-2, 1), (2, 1.5))
+      
+      line((-2, 1), (-3, -1))
+
+      line((4, 0.5), (2, 1.5))
+
+      line((-3, -1), (-0.25, 0))
+      line((-0.25, 0), (1.25, -1.75))
+      line((4, 0.5), (3.75, -1.5))
+
+      line((1.25, -1.75), (3.75, -1.5))
+      line((4, 0.5), (6, 0.25))
+      line((9, 1), (6, 0.25))
+      line((8, -1.75), (6, 0.25))
+      line((8, -1.75), (9, 1))
+
+
+
+      set-style(stroke: (paint: whitesnow.darken(30%), thickness: 2pt, dash: none))
+      circle((-2, 1), fill: whitesnow.lighten(80%), radius: 0.75)   //
+      circle((-3, -1), fill: whitesnow.lighten(80%), radius: 0.75)
+
+      set-style(stroke: (paint: green.darken(30%), thickness: 2pt, dash: none))
+      circle((2, 1.5), fill: green.lighten(80%), radius: 0.75)
+      circle((-0.25, 0), fill: green.lighten(80%), radius: 0.75) 
+
+      set-style(stroke: (paint: whitesnow.darken(30%), thickness: 2pt, dash: none))
+      circle((4, 0.5), fill: whitesnow.lighten(80%), radius: 0.75)   //
+      circle((1.25, -1.75), fill: whitesnow.lighten(80%), radius: 0.75) //
+      circle((3.75, -1.5), fill: whitesnow.lighten(80%), radius: 0.75)
+
+      set-style(stroke: (paint: green.darken(30%), thickness: 2pt, dash: none))
+      circle((6, 0.25), fill: green.lighten(80%), radius: 0.75)
+      circle((8, -1.75), fill: green.lighten(80%), radius: 0.75)
+      circle((9, 1), fill: green.lighten(80%), radius: 0.75)
+
+    })
+  ]
+
 #slide(
   title: "How to compute one?",
 )[
 
   A #emph[low diameter clustering] $cal("C") subset.eq 2^V$ for a graph $G$ with diameter $d$ is such:
   1. $forall C_1 != C_2 in cal("C") : italic("dist")_G (C_1, C_2) >= 2$
-    - #emph[There are no adjacent clusters]
+    - *_"There are no adjacent clusters"_*
   2. $forall C in cal("C") : italic("diam")(G[C]) <= d$
-    - #emph[Any cluster has diameter at most] $d$
+    - *_"Any cluster has diameter at most $d$"_*
+    
+  #v(-16pt)
+  
+  #low-diameter-clustering
 
-  #key[A clustering *can not be a partitioning*: some nodes have to be left out]
+ // #key[A non-trivial clustering #text(weight: 700)[can not be a partitioning]: some nodes have to be left out]
 ]
 
 #slide(
@@ -857,6 +917,7 @@
   ]
 ]
 
+/*
 #slide(
   title: "How to compute one?",
 )[
@@ -866,6 +927,7 @@
 
   // TODO proof?
 ]
+*/
 
 #slide(
   title: "Definitions"
@@ -874,7 +936,7 @@
   
   We say a clustering has #emph[weak] diameter when:
   1. (unchanged) #faded["There are no adjacent clusters"];
-  2.  "Any cluster has diameter *in $G$* at most" $d$
+  2.  Any cluster has *_"diameter in $G$"_* at most $d$
 
 ]
 
@@ -891,7 +953,7 @@
     - Outputs a clustering with $O(log^3 n)$ colors
     - Directly strong diameter #pause
 
-  - Previously @rg20 provided a l.d.c with #emph[weak] diameter
+  - Previously @rg20 provided a l.d.c with *weak* diameter
     - $O(log^7 n)$ rounds with $O(log^3 n)$ colors
     - It's possible to turn it into strong diameter #pause
   
@@ -900,28 +962,42 @@
 ]
 
 #slide(
+  title: [Algorithm Outline (Intuition)]
+)[
+  *Objectives*:
+  1. Creating connected components with #polylog-hint[low] diameters
+    - Keep track of the "center" of the c.c.
+      - A.k.a. #emph[Terminal]
+    - We will merge c.c.s
+      - Only one terminal is going to be the new center
+    - Remove c.c.s with nodes "too far away" #pause
+  2. Cluster *at least half* of the nodes
+    - Required for #polylog-hint[few] colors *network decompositions*
+]
+
+#slide(
   title: [Algorithm Outline]
 )[
   #emph[Phases]
-  - There are $b = log (max i) = O(log n)$ #emph[phases]
+  - There are $b = log (max_(v in V) id(v)) = O(log n)$ *phases*
   - "One phase for each bit in index"
-    - Phase $i in [0, b - 1]$ computes "_#emph[terminals] set_" $Q_i$
-
-  #emph[Notation]
+    - Phase $i in [0, b - 1]$ computes #emph[terminals set] $Q_i$
+  
+  *Notation*:
   - $Q_i$ is the terminals set built _before_ phase $i$
   - $Q_b$ is the terminals set built _after_ phase $b-1$
-
+  - $V_i$ is the set of *living nodes* at the beginning of phase $i$
+  - $V' = V_b$ is the set of *living nodes* after the last phase
 ]
 
-// TODO terminal definition?
-
+/*
 #slide(
   title: [Algorithm Outline (informal)]
 )[
   // TODO ripassa cos'è un connected component
-  #emph[Objective 1:] Creating *connected components* with low diameters
-  - Eventually, each connected component will contain exactly one terminal
-    - Keep terminals #formal-def[close] to active nodes
+  *Objective 1:* Creating c.c. with #polylog-hint[low] diameters
+  - In the end each c.c. will contain exactly 1 terminal
+    - Keep terminals #polylog-hint[close] to active nodes
       - This ensures polylogarithmic diameter
       - Removing nodes is allowed
 
@@ -943,32 +1019,30 @@
   title: [Algorithm Outline]
 )[
   #emph[Further notation:]
-  - $V_i$ is the set of *living nodes* at the beginning of phase $i$ ($V_0 = V$)
-  - $V'$ is the set of *living nodes* after the last phase;
-    - $V' = V_b$
 ]
+*/
 
 #slide(
   title: [Phase Invariants $forall i in [0..b]$]
 )[
   1. $Q_i$ is $R_i$-ruling, i.e. $italic("dist")_G (Q_i, v) <= R_i$ for all $v in V$
-    - We set $R_i = i * O(log^2 n)$
-    - $Q_0$ is $0$-ruling, trivially true with $Q_0 = V$
-    // "all nodes are terminals at the beginning"
-    - $Q_b$ is $O(log^3 n)$-ruling
+    - *We set* $R_i = i * O(log^2 n)$
+      - $Q_0$ is $0$-ruling, trivially true with $Q_0 = V$
+        - _*"All nodes are terminals at the beginning"*_
+      - $Q_b$ is $O(log^3 n)$-ruling
   
-  #key[Each node has polylogarithmic distance from $Q_b$ $=>$ each connected component has #emph[at least one] terminal]
+  #key[_"Each node has polylog distance from $Q_b$"_ \ $=>$ Each c.c. has #text(weight: 700)[at least one] terminal]
   // if not, some nodes would have infinite distance
 ]
 
 #slide(
   title: [Phase Invariants $forall i in [0..b]$]
 )[
-  2. let $q_1, q_2 in Q_i$ s.t. they are in the same connected component in $G[V_i]$. Then $id(q_1)[0..i] = id(q_2)[0..i]$
+  2. let $q_1, q_2 in Q_i$ s.t. they are in the same c.c in $G[V_i]$. \ Then $id(q_1)[0..i] = id(q_2)[0..i]$
     - for $i = 0$ it's trivially true
     - for $i = b$ there is $<= 1$ terminal in each c.c.
   
-  #key[Along with invariant (1.), it means that each c.c. has polylogarithmic diameter! ]
+  #key[Along with invariant (1.), it means that each c.c. has polylog diameter! ]
 ]
 
 #slide(
@@ -978,17 +1052,17 @@
     - $V_0 >= V$
     - $V' >= frac(1, 2) |V|$
   
-  "The algorithm doesn't discard too much vertexes from the graph"
+  - *_"The algorithm clusters at least half of the nodes"_*
 ]
 
 #slide(
   title: [Phase Outline]
 )[
-  #emph[Objective:] Keeping only terminals from which is possible to build a *forest* whose *trees* have polylogarithmic diameter
+  *Objective:* Keeping only terminals from which is possible to build a *forest* whose *trees* have polylog diameter
   - Leaves of the trees may be connected in $G$
   // TODO immagine
 
-  #emph[Outline:]
+  *Outline:*
   - $2b^2$ #emph[steps], each computing a forest
   - resulting into a sequence of forests $F_0 .. F_(2b^2)$
 ]
@@ -1002,10 +1076,10 @@
 #slide(
   title: [Step Outline]
 )[
-  #emph[Inductive definition:]
-  - $F_0$ is a BFS forest with roots in $Q_i$
+  *Inductive definition:*
+  - $F_0$ is a BFS forest with roots set $Q_i$
   - let $T$ be any tree in $F_j$ and $r$ its root
-    - if $id(r)[i] = 0$ the whole tree is `red`, if not `blue`
+    - if $id(r)[i] = 0$ the whole tree is `red`, otherwise `blue`
       - `red` vertexes stay `red`
       - some `blue` nodes stay `blue`
       - some others #emph[propose] to join `red` trees
@@ -1014,33 +1088,33 @@
 #slide(
   title: [Step Outline]
 )[
-  #emph[Proposal:]
+  #emph[Proposal]:
 
-  $v in V_j^italic("propose") <=> & v "is `blue`" \
+  $v in V_j^italic("propose") <=> & v "is " #text[`blue`] \
   and & v "is the only one in " italic("path")(v, italic("root")(v)) \ 
-  & "that neighbours a `red` node"$
+  & "that neighbours a " #text[`red`] " node"$
 
-  Define $T_v$ the (`blue`) subtree rooted at $v$
+  - Define $T_v$ the (`blue`) subtree rooted at $v$
 
-  #note[$v$ is the only node in $T_v$ that is also in $V_j^italic("propose")$]
+  #key[$v$ is the only node in $T_v$ that is also in $V_j^italic("propose")$]
 ]
 
 #slide(
   title: [Step Outline]
 )[
-  #emph[Proposal:]
+  #emph[Proposal]:
 
   - Each node in $V_j^italic("propose")$ proposes to an arbitrary `red` neighbour
   - Each `red` tree decides to grow or not
-    - If it grows, it accepts all proposing trees
+    - If it grows, it accepts all proposing subtrees
     - If not, all proposing subtrees are frozen
-  - #emph[Criteria:] it decides to grow if it would gain at least $frac(|V(T)|, 2b)$ nodes
+  - *Criteria*: it decides to grow if gains at least $frac(|V(T)|, 2b)$ nodes
 ]
 
 #slide(
   title: [Observations]
 )[
-  #note[If the `red` tree doesn't decide to grow, it will neighbour `red` nodes only]
+  #note[If a `red` tree doesn't decide to grow, it will neighbour `red` nodes only]
 
   - This means it will be able to delete nodes only once in the whole phase // (i.e. among all $2b^2$ steps)
     #list(
@@ -1093,508 +1167,38 @@
 ]
 
 #slide(
-  title: [Step Complexity]
+  title: [Complexity]
 )[
 
   - Recall invariant (1.)
     - $forall v in V : italic("dist")_G (Q_i, v) = O(log^3 n)$, for all $i in 0..b$
     - Hence, $italic("diam")(T_v) = O(log^3 n)$, for all $v in V$
 
-  - Complexity is $italic("#steps") times italic("#phases") times O(italic("diam")(T_v))$
-    - $= O(log n) times O(log^2 n) times O(log^3 n)$
-  The algorithm runs in $O(log^6 n)$ communication steps
+  - Complexity is $italic("#steps") dot italic("#phases") dot O(italic("diam")(T_v))$ \
+    $= O(log n) dot O(log^2 n) dot O(log^3 n)$
+  $=>$ The algorithm runs in $O(log^6 n)$ communication steps
   
 ]
 
 #slide(
   title: [Recap]
 )[
-  - We've seen how to build a *low diameter clustering* ($O(log^6 n)$)
-    - It clusters at least $n/2$ nodes
+  - We've seen how to build a *low diameter clustering* 
+    - In $O(log^6 n)$ communication steps
+    - It clusters at least $n/2$ nodes #pause
   - We can apply that until all nodes have a color
     - $O(log n)$ steps and therefore $O(log n)$ colors
-  - For each color, we solve MIS @chps17
-    - In parallel in the clusters ($O(log^3 n times log^2 n)$)
+    - *Network decomposition* in $O(log^7 n)$ #pause
+  - We solve MIS @chps17 for each color $(O(log n) dot ...)$
+    - In parallel in the clusters $(... dot O(log^3 n dot log^2 n))$ #pause
   #list(
     marker: [$=>$],
-    [We end up solving MIS in $O(log^6 n)$ rounds]
+    [We end up solving MIS in $O(log^7 n)$ rounds]
   )
 ]
-/* 
-#slide(
-  title: [Recap]
-)[
-  #grid(columns: (15fr, 8fr), gutter: 0.25em, 
-  [
-  - We've seen how to build a *low diameter clustering*
-    - It clusters at least $n/2$ nodes
-  - We can apply that until all nodes have a color
-    - $O(log n)$ colors
-  - For each color, we solve MIS @chps17
-    - In parallel in the clusters
-  #list(
-    marker: [$=>$],
-    [We end up solving MIS in $O(log^6 n)$ rounds]
-  )
-  ], [
-    $O(log^6 n)$
-
-    \ \ 
-    $+$ $O(log n)$
-    \ \
-    $+$ ($O(log n) times$
-
-    $O(log^3 n times log^2 n)$)
-  ])
-] */
-
-/*
-#slide(
-  title: "The Communication Pitfall"
-)[
-  #set align(center)
-
-  #cetz.canvas({
-    import cetz.draw: *
-
-    set-style(stroke: (paint: teal.darken(30%), thickness: 2pt))
-
-    line((-3, -1), (0, 0))
-    line((-3, 3), (0, 0))
-    line((2, 3), (1, 5))
-    line((2, 3), (5, 7))
-    line((-3, 3), (-6, 7))
-    line((-3, 3), (-6, 5))
-    line((0, 0), (0, 3))
-    line((-3, 3), (0, 3))
-    line((1, 5), (0, 3))
-    line((-4, 1), (-3, -1))
-
-
-    circle((-3, -1), fill: teal.lighten(80%), radius: 0.75)
-    circle((-6, 5), fill: teal.lighten(80%), radius: 0.75)
-    circle((1, 5), fill: teal.lighten(80%), radius: 0.75)
-    circle((0, 0), fill: teal.lighten(80%), radius: 0.75)
-    circle((0, 3), fill: teal.lighten(80%), radius: 0.75)
-    circle((5, 7), fill: teal.lighten(80%), radius: 0.75)
-    content((5, 7), text(size: .8em, $u$))
-    circle((-6, 7), fill: teal.lighten(80%), radius: 0.75)
-    circle((2, 3), fill: teal.lighten(80%), radius: 0.75)
-    circle((-3, 3), fill: teal.lighten(80%), radius: 0.75)
-    circle((-4, 1), fill: teal.lighten(80%), radius: 0.75)
-    content((-4, 1), text(size: .8em, $v$))
-    
-    set-style(mark: (end: "straight"), stroke: (paint: olive.darken(30%), thickness: 3pt))
-    // bezier((-4.5, -2.5), (-3.5, -0.5), (-4.5, -0.5), stroke:(dash: "dashed"))
-    line((-4, 1), (-3, -1), (0, 0), (0, 3), (1, 5), (2, 3), (5, 7), stroke: (dash: "dashed"))
-    bezier((-4, 1), (-3, -1), (0, 0))
-  })
-
-  #set align(left)
-  Hence we are interested in *#text(fill: unipd-red)[_(communication) rounds_]* complexity
-]
-*/
 
 #slide(
   title: "Bibliography"
 )[
   #bibliography("works.bib")
 ]
-
-#slide(
-  title: "About this presentation",
-  new-section: "Introduction",
-)[
-    This presentation is supposed to briefly showcase
-    what you can do with this package.
-
-    For a full documentation, read the #link(
-      "https://andreaskroepelin.github.io/polylux/book/",
-    )[online book].
-  ]
-
-#slide(
-  title: "A title",
-)[
-    Let's explore what we have here.
-
-    On the top of this slide, you can see the slide
-    title.
-
-    We used the `title` argument of the `#slide`
-    function for that: ```typ
-        #slide(title: "First slide")[
-            ...
-        ]
-        ```
-    (This works because we utilise the `clean` theme;
-    more on that later.)
-  ]
-
-#slide[
-    Titles are not mandatory, this slide doesn't have
-    one.
-
-    But did you notice that the current section name
-    is displayed above that top line?
-
-    We defined it using #raw(
-      "#new-section-slide(\"Introduction\")",
-      lang: "typst",
-      block: false,
-    ).
-
-    This helps our audience with not getting lost
-    after a microsleep.
-
-    You can also spot a short title above that.
-  ]
-
-#slide(
-  title: "The bottom of the slide",
-)[
-    Now, look down!
-
-    There we have some general info for the audience
-    about what talk they are actually attending right
-    now.
-
-    You can also see the slide number there.
-  ]
-
-#slide(
-  title: "Random text",
-  new-section: "Dynamic content",
-)[
-    #lorem(64)
-  ]
-
-#slide(
-  title: [A dynamic slide with `pause`s],
-)[
-    Sometimes we don't want to display everything at
-    once. #pause
-
-    That's what the `#pause` function is there for! #pause
-
-    It makes everything after it appear at the next
-    subslide.
-
-    #text(
-      .6em,
-    )[(Also note that the slide number does not change
-        while we are here.)]
-  ]
-
-#slide(
-  title: "Fine-grained control",
-)[
-    When `#pause` does not suffice, you can use more
-    advanced commands to show or hide content.
-
-    These are some of your options: - `#uncover`
-    - `#only`
-    - `#alternatives`
-    - `#one-by-one`
-    - `#line-by-line`
-
-    Let's explore them in more detail!
-  ]
-
-#slide(
-  title: [`#uncover`: Reserving space],
-)[
-    With `#uncover`, content still occupies space,
-    even when it is not displayed.
-
-    For example, #uncover(2)[these words] are only
-    visible on the second"subslide".
-
-    In `()` behind `#uncover`, you specify _when_ to
-    show the content, and in `[]` you then say _what_
-    to show: #example[
-        ```typ
-                #uncover(3)[Only visible on the third "subslide"]
-                ```
-        #uncover(3)[Only visible on the third"subslide"]
-      ]
-  ]
-
-#slide(
-  title: "Complex display rules",
-)[
-    So far, we only used single subslide indices to
-    define when to show something.
-
-    We can also use arrays of numbers ...
-    #example[
-        ```typ
-                #uncover((1, 3, 4))[Visible on subslides 1, 3, and 4]
-                ```
-        #uncover((1, 3, 4))[Visible on subslides 1, 3, and 4]
-      ]
-
-    ...or a dictionary with `beginning` and/or `until`
-    keys: #example[
-        ```typ
-                #uncover((beginning: 2, until: 4))[Visible on subslides 2, 3, and 4]
-                ```
-        #uncover(
-          (beginning: 2, until: 4),
-        )[Visible on subslides 2, 3, and 4]
-      ]
-  ]
-
-#slide(
-  title: "Convenient rules as strings",
-)[
-    As as short hand option, you can also specify
-    rules as strings in a special syntax.
-
-    Comma separated, you can use rules of the form #table(
-      columns: (auto, auto),
-      column-gutter: 1em,
-      stroke: none,
-      align: (x, y) => (right, left).at(x),
-      [`1-3`],
-      [from subslide 1 to 3 (inclusive)],
-      [`-4`],
-      [all the time until subslide 4 (inclusive)],
-      [`2-`],
-      [from subslide 2 onwards],
-      [`3`],
-      [only on subslide 3],
-    )
-  ]
-
-#slide(
-  title: [`#only`: Reserving no space],
-)[
-    Everything that works with `#uncover` also works
-    with `#only`.
-
-    However, content is completely gone when it is not
-    displayed.
-
-    For example, #only(2)[#text(red)[see how]] the
-    rest of this sentence moves.
-
-    Again, you can use complex string rules, if you
-    want. #example[
-        ```typ
-                #only("2-4, 6")[Visible on subslides 2, 3, 4, and 6]
-                ```
-        #only("2-4, 6")[Visible on subslides 2, 3, 4, and 6]
-      ]
-  ]
-
-#slide(
-  title: [`#alternatives`: Substituting content],
-)[
-    You might be tempted to try #example[
-        ```typ
-                #only(1)[Ann] #only(2)[Bob] #only(3)[Christopher] likes #only(1)[chocolate] #only(2)[strawberry] #only(3)[vanilla] ice cream.
-                ```
-        #only(1)[Ann] #only(2)[Bob] #only(3)[Christopher]
-
-        likes #only(1)[chocolate] #only(2)[strawberry] #only(3)[vanilla]
-
-        ice cream.
-      ]
-
-    But it is hard to see what piece of text actually
-    changes because everything moves around. Better: #example[
-        ```typ
-                #alternatives[Ann][Bob][Christopher] likes #alternatives[chocolate][strawberry][vanilla] ice cream.
-                ```
-        #alternatives[Ann][Bob][Christopher] likes #alternatives[chocolate][strawberry][vanilla]
-        ice cream.
-      ]
-  ]
-
-#slide(
-  title: [`#one-by-one`: An alternative for `#pause`],
-)[
-    `#alternatives` is to `#only` what `#one-by-one`
-    is to `#uncover`.
-
-    `#one-by-one` behaves similar to using `#pause`
-    but you can additionally state when uncovering
-    should start. #example[
-        ```typ
-                #one-by-one(start: 2)[one ][by ][one]
-                ```
-        #one-by-one(start: 2)[one][by][one]
-      ]
-
-    `start` can also be omitted, then it starts with
-    the first subside: #example[
-        ```typ
-                #one-by-one[one ][by ][one]
-                ```
-        #one-by-one[one][by][one]
-      ]
-  ]
-
-#slide(
-  title: [`#line-by-line`: syntactic sugar for `#one-by-one`],
-)[
-    Sometimes it is convenient to write the different
-    contents to uncover one at a time in subsequent
-    lines.
-
-    This comes in especially handy for bullet lists,
-    enumerations, and term lists. #example[
-        #grid(
-          columns: (1fr, 1fr),
-          gutter: 1em,
-          ```typ
-                      #line-by-line(start: 2)[
-                          - first
-                          - second
-                          - third
-                      ]
-                      ```,
-          line-by-line(
-            start: 2,
-          )[
-              - first
-              - second
-              - third
-            ],
-        )
-      ]
-
-    `start` is again optional and defaults to `1`.
-  ]
-
-#slide(
-  title: [`#list-one-by-one` and Co: when `#line-by-line`
-    doesn't suffice],
-)[
-    While `#line-by-line` is very convenient
-    syntax-wise, it fails to produce more
-    sophisticated bullet lists, enumerations or term
-    lists. For example, non-tight lists are out of
-    reach.
-
-    For that reason, there are `#list-one-by-one`, `#enum-one-by-one`
-    , and `#terms-one-by-one`, respectively. #example[
-        #grid(
-          columns: (1fr, 1fr),
-          gutter: 1em,
-          ```typ
-                      #enum-one-by-one(start: 2, tight: false, numbering: "i)")[first][second][third]
-                      ```,
-          enum-one-by-one(
-            start: 2,
-            tight: false,
-            numbering: "i)",
-          )[first][second][third],
-        )
-      ]
-
-    Note that, for technical reasons, the bullet
-    points, numbers, or terms are never covered.
-
-    `start` is again optional and defaults to `1`.
-  ]
-
-#slide(
-  title: "How a slide looks...",
-  new-section: "Themes",
-)[
-    ... is defined by the _theme_ of the presentation.
-
-    This demo uses the `unipd` theme.
-
-    Because of it, the title slide and the decoration
-    on each slide (with section name, short title,
-    slide number etc.) look the way they do.
-
-    Themes can also provide variants, for example ...
-  ]
-
-#focus-slide[
-    ... this one!
-
-    It's very minimalist and helps the audience focus
-    on an important point.
-  ]
-
-#slide(
-  title: "Your own theme?",
-)[
-    If you want to create your own design for slides,
-    you can define custom themes!
-
-    #link(
-      "https://andreaskroepelin.github.io/polylux/book/themes.html#create-your-own-theme",
-    )[The book]
-    explains how to do so.
-  ]
-
-#slide(
-  title: [The `utils` module],
-  new-section: "Utilities",
-)[
-    Polylux ships a `utils` module with solutions for
-    common tasks in slide building.
-  ]
-
-#slide(
-  title: [Fit to height],
-)[
-    You can scale content such that it has a certain
-    height using `#fit-to-height(height, content)`:
-
-    #fit-to-height(2.5cm)[Height is `2.5cm`]
-  ]
-
-#slide(
-  title: "Fill remaining space",
-)[
-    This function also allows you to fill the
-    remaining space by using fractions as heights,
-    i.e. `fit-to-height(1fr)[...]`:
-
-    #fit-to-height(1fr)[Wow!]
-  ]
-
-#slide(
-  title: "Side by side content",
-)[
-    Often you want to put different content next to
-    each other. We have the function `#side-by-side`
-    for that:
-
-    #side-by-side(lorem(10), lorem(15), lorem(12))
-  ]
-
-#slide(
-  title: "Outline",
-)[
-    Why not include an outline? #polylux-outline(padding: 0.5em, enum-args: (tight: false))
-  ]
-
-#slide(
-  title: "Use Typst!",
-  new-section: "Typst features",
-)[
-    Typst gives us so many cool things #footnote[For example footnotes!]
-    . Use them!
-  ]
-
-#slide(
-  title: "That's it!",
-  new-section: "Conclusion",
-)[
-    Hopefully you now have some kind of idea what you
-    can do with this template.
-
-    Consider giving it #link(
-      "https://github.com/andreasKroepelin/polylux",
-    )[a GitHub star]
-    or open an issue if you run into bugs or have
-    feature requests.
-  ]
