@@ -539,7 +539,7 @@
   - Sending the whole graph requires $O(n^2)$ rounds:
     - The adjacency matrix suffices...
 
-  #warning[$=>$ We can't use #smallcaps[Gather-All] in the CONGEST model]
+  #warning[$=>$ We can't use #text(weight: "light")[#smallcaps[Gather-All]] in the CONGEST model]
 ]
 
 #focus-slide[
@@ -930,6 +930,45 @@
 ]
 */
 
+#let weak-d = [
+    #set align(center)
+
+    #cetz.canvas({
+      import cetz.draw: *
+
+
+      set-style(stroke: (paint: gray, thickness: 4pt, dash: "dashed"))
+
+      line((-3, 1), (-1, 0))
+      line((-1, 0), (-2.5, -2))
+
+      set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+
+      line((-3, 1), (2, 1.5))
+      
+
+      line((4, 0.5), (2, 1.5))
+
+      line((-2.5, -2), (1.25, -1.75))
+      line((4, 0.5), (3.75, -1.5))
+
+      line((1.25, -1.75), (3.75, -1.5))
+
+      set-style(stroke: (paint: green.darken(30%), thickness: 2pt, dash: none))
+      circle((2, 1.5), fill: green.lighten(80%), radius: 0.75)
+      circle((-2.5, -2), fill: green.lighten(80%), radius: 0.75) 
+      circle((4, 0.5), fill: green.lighten(80%), radius: 0.75)   //
+      circle((1.25, -1.75), fill: green.lighten(80%), radius: 0.75) //
+      circle((3.75, -1.5), fill: green.lighten(80%), radius: 0.75)
+      circle((-3, 1), fill: green.lighten(80%), radius: 0.75)   //
+
+      // set-style(stroke: (paint: teal.darken(30%), thickness: 2pt, dash: none))
+      set-style(stroke: (paint: gray.darken(30%), thickness: 2pt, dash: none))
+      circle((-1, 0), fill: gray.lighten(80%), radius: 0.75)
+
+    })
+  ]
+
 #slide(
   title: "Definitions"
 )[
@@ -939,6 +978,8 @@
   1. (unchanged) #faded["There are no adjacent clusters"];
   2.  Any cluster has *_"diameter in $G$"_* at most $d$
 
+  #set align(center)
+  #weak-d
 ]
 
 #focus-slide[
@@ -951,14 +992,14 @@
 )[
   - Main accomplishments of @rhg22:
     - Terminates in $O(log^6 n)$ rounds in the CONGEST model
-    - Outputs a clustering with $O(log^3 n)$ colors
+    - Outputs a clustering with $d = O(log^3 n)$
     - Directly strong diameter #pause
 
-  - Previously @rg20 provided a l.d.c with *weak* diameter
-    - $O(log^7 n)$ rounds with $O(log^3 n)$ colors
+  - Previously @rg20 provided a l.d.c. with *weak* diameter
+    - $O(log^7 n)$ rounds with $d = O(log^3 n)$
     - It's possible to turn it into strong diameter #pause
   
-  - @ehrg22 did it in $O(log^4 n)$ rounds with $O(log^3 n)$ colors
+  - @ehrg22 did it in $O(log^4 n)$ rounds with $d = O(log^3 n)$
     - Has to pass by a weak d. intermediate solution
 ]
 
@@ -971,7 +1012,7 @@
       - A.k.a. #emph[Terminal]
     - We will merge c.c.s
       - Only one terminal is going to be the new center
-    - Remove c.c.s with nodes "too far away" #pause
+    - Remove nodes separating c.c.s "too far away" #pause
   2. Cluster *at least half* of the nodes
     - Required for #polylog-hint[few] colors *network decompositions*
 ]
@@ -1246,7 +1287,7 @@
 #slide(
   title: [Phase Invariants $forall i in [0..b]$]
 )[
-  1. $Q_i$ is $R_i$-ruling, i.e. $italic("dist")_G (Q_i, v) <= R_i$ for all $v in V$
+  1. $Q_i$ is $R_i$-ruling, i.e. $italic("dist")_G (Q_i, v) <= R_i$ for all $v in V_i$
     - *We set* $R_i = i * O(log^2 n)$
       - $Q_0$ is $0$-ruling, trivially true with $Q_0 = V$
         - _*"All nodes are terminals at the beginning"*_
@@ -1259,7 +1300,7 @@
 #slide(
   title: [Phase Invariants $forall i in [0..b]$]
 )[
-  2. Let $q_1, q_2 in Q_i$ s.t. they are in the same c.c in $G[V_i]$. \ Then $id(q_1)[0..i] = id(q_2)[0..i]$
+  2. Let $q_1, q_2 in Q_i$ s.t. they are in the same c.c. in $G[V_i]$. \ Then $id(q_1)[0..i] = id(q_2)[0..i]$
     - For $i = 0$ it's trivially true
     - For $i = b$ there is $<= 1$ terminal in each c.c.
   
@@ -1279,7 +1320,7 @@
 #slide(
   title: [Phase Outline]
 )[
-  *Objective:* In a c.c. remove from $Q_i$ all terminals with same $id(v)$ prefix except one
+  *Objective:* In a c.c. remove from $Q_i$ all terminals with different $id(v)$ prefix except one
     - Keep c.c. #polylog-hint[small]
     - Divide it if not possible by removing nodes
   
@@ -1349,7 +1390,11 @@
       marker: [$=>$],
       [At most $frac(|V|, 2b)$ nodes are lost in each phase],
       [After the $b$ phases at most $frac(|V|, 2)$ nodes are removed]
-    )
+    ) #pause
+  
+  #v(1fr)
+  - #red-node trees grow at most of $(i + 1) dot O(log^2 n)$
+  #v(1fr)
 ]
 
 #slide(
