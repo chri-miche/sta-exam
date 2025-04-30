@@ -108,7 +108,7 @@
 ), weight: "regular", size: 26pt)
 
 #show raw: set text(size: 1.1em)
-#show smallcaps: set text(font: "EB Garamond SC 12")
+#show smallcaps: set text(font: "FreeSans")
 
 #title-slide(
   title: "Efficient Low Diameter Clustering",
@@ -120,7 +120,14 @@
 #slide(
   title: [About this Presentation]
 )[
-  #polylux-outline(padding: 0.5em, enum-args: (tight: false))
+  // #polylux-outline(padding: 0.5em, enum-args: (tight: false))
+  #v(1fr)
+  1. Distributed Algorithms
+  #v(1fr)
+  2. Network Decomposition
+  #v(1fr)
+  3. Low Diameter Clustering
+  #v(1fr)
 ]
 
 #slide(
@@ -134,22 +141,12 @@
 
   #pause
 
+  - Nodes can run code
+    - Should be *the same for all nodes*
+
   #idea[Each node gives a partial solution]
   
-  - At the end they are all combined altogether
-]
-
-#slide(
-  title: "Intuition"
-)[
-
-  ...how can we combine those partial solutions?
-
-  #warning[Distribution $=>$ Collaboration]
-
-  - Arcs are *direct links* between computers
-   - Computers have to exchange *messages*
-  
+  - Arcs are *communication links* between computers
 ]
 
 #slide(
@@ -166,6 +163,7 @@
       set-style(content: (frame: "rect", stroke: none, fill: white))
 
 
+      line((-2, 2), (2, 2), stroke: (dash: "dashed"))
       line((-1.5, 0), (0, 0))
       line((-1.5, 0), (-3, 0), stroke: (dash: "dashed"))
       circle((-3, 0), fill: teal.lighten(80%), radius: 0.75, stroke: (dash: "dashed"))
@@ -178,19 +176,23 @@
       line((-1, 1), (-2, 2), stroke: (dash: "dashed"))
       circle((-2, 2), fill: teal.lighten(80%), radius: 0.75, stroke: (dash: "dashed"))
 
-      circle((0, 0), fill: teal.lighten(80%), radius: 0.75, name: "node")  
+      circle((0, 0), fill: teal.lighten(80%), radius: 0.75, name: "node")
+      /*  
       content("node.north-east", [#set text(size: 17pt, fill: teal.darken(50%), weight: "bold"); 1], anchor: "south-west")   
       content("node.north-west", [#set text(size: 17pt, fill: teal.darken(50%), weight: "bold"); 2], anchor: "south-east") 
       content("node.west", [#set text(size: 17pt, fill: teal.darken(50%), weight: "bold"); 3], anchor: "east")  
+      circle((0, 0), fill: teal.lighten(80%), radius: 0.75)
+      */
     })
   ]
 
   #let left-content = [
 
-    - In the *PN-Network* a node only knows some _Numbered Ports_
-      - Connected with a *different* nodes
-        - Such nodes are called #emph[neighbours]
+    - In the *PN-Network* a node only knows its #emph[neighbours]
+      - And how to "contact" them
     - There are no *self loops*
+    - Connection is two-way
+    - There is $<= 1$ arc between two nodes
   ]
 
   #grid(
@@ -229,7 +231,8 @@
 
   // we don't want to [limitare] the pool of indentifiers too much, but we want at least an upper bound
 
-  #key[We choose $n^c$ so that we need $O(log n)$ bits to represent an identifier, i.e. identifiers are reasonably #polylog-hint[small]]
+  #key[We choose $n^c$ so we need $O(log n)$ bits to represent an identifier, \
+  (identifiers are reasonably #polylog-hint[small])]
 
   // so this seems enough for the model
   // but we need to define how communication works
@@ -240,12 +243,13 @@
   title: "Communication (Intuition)"
 )[
   - Collaboration requires *exchanging messages*
-   - ...on a medium that is *slow* and *unreliable*
+   \ ...on a medium that is *slow* and *unreliable*
 
   //  Our aim is to study algorithms that execute in a distributed environment
   #warning[$=>$ Communication is the main pitfall]
 
-  - We *measure* the number of messages that an algorithm requires
+  - Too many messages congest the network
+  - We *quantify* the number of messages that an algorithm requires
     - An #polylog-hint[efficient] algorithm will need few messages
 ]
 
@@ -258,12 +262,12 @@
   // why? so that we can quantify easier the ceiling / "worst case" of the number of message sent in the network
 
   Each round, a node $v in V$ performs these actions:
-  1. $v$ #emph[sends] a message $italic("msg") in NN$ to its neighbours;
-  2. $v$ #emph[receives] messages from its neighbours;
+  1. $v$ #emph[sends] a message $italic("msg") in NN$ to its neighbours
+  2. $v$ #emph[receives] messages from its neighbours
   3. ... #pause
 
   - (1.) and (2.) establish a #emph[communication round]
-    - Main measure of complexity
+    - *Measure unit of complexity*
     - Few communication rounds $=>$ few messages
 ]
 
@@ -271,15 +275,15 @@
   title: "Communication Model",
 )[
   3. $v$ #emph[executes locally] some algorithm (same for each node).
-    - A node can #emph[stop] in this phase
-      - Its local result won't change anymore
+    - A node may #emph[stop] in this phase
+      - Its local result is *final*
   
   #note[(3.) doesn't affect the algorithm's complexity] #pause
   // we are interested in capture the complexity that is upon the network
 
   - When all nodes *stopped* the algorithm terminates
 
-  #key[We say that an algorithm is #polylog-hint[efficient] when it stops in #text(fill: oxford-blue, weight: 700)[polylogarithmic] number of rounds]
+  #key[An algorithm is #polylog-hint[efficient] when it stops in a number of rounds #text(fill: oxford-blue, weight: 700)[polylogarithmic] in $|V|$]
 ]
 
 /*
@@ -294,10 +298,10 @@
 */
 
 #slide(
-  title: [A First Example (#smallcaps("Wave"))]
+  title: [#smallcaps("Wave"): A First Example]
 )[
 
-  - The node with $id(v) = 1$ _"waves hello"_ to neighbours
+  - The node with $id(v) = 0$ _"waves hello"_ to neighbours
     - ...sending them a message #pause
   // doing stuff based on id is enough to break symmetry
   

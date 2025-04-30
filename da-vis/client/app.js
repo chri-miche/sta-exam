@@ -131,7 +131,9 @@ function setup_cytoscape(n, edges) {
       {
         selector: '.color-grey',
         style: {
-          'background-color': 'gainsboro'
+          'background-color': 'gainsboro',
+          'border-color': 'gray',
+          'border-width': '1px'
         }
       },
 
@@ -251,6 +253,9 @@ const pauseBehavior = new BehaviorSubject(false);
 
 async function main(algorithms) {
 
+  const inputTimeout = document.getElementById('seconds-inpt');
+  const roundTimeout = inputTimeout.value;
+
   let totalRounds = 0;
   for (const algorithm of algorithms) {
     
@@ -258,7 +263,7 @@ async function main(algorithms) {
       node.restart();
     }
     const rounds = await run(algorithm, window.net, {
-      roundTimeout: 100,
+      roundTimeout,
       applyStyle: node => {
         const els = window.cy.elements(`#${node.id}`);
         els.classes([]);
@@ -274,7 +279,7 @@ async function main(algorithms) {
       pauseBehavior: pauseBehavior
     });
 
-    await sleep(500);
+    await sleep(roundTimeout);
     
     await firstValueFrom(pauseBehavior);
 
@@ -282,16 +287,16 @@ async function main(algorithms) {
   }
   
   
-  const displayRounds = document.getElementById("display-rounds");
-  displayRounds.innerHTML = `Total: ${totalRounds} communication rounds`
+  // const displayRounds = document.getElementById("display-rounds");
+  // displayRounds.innerHTML = `Total: ${totalRounds} communication rounds`
 }
 
 function reset() {
   // location.reload();
   selectNet(window.selectedNet);
 
-  const displayRounds = document.getElementById("display-rounds");
-  displayRounds.innerHTML = "";
+  // const displayRounds = document.getElementById("display-rounds");
+  // displayRounds.innerHTML = "";
 }
 
 

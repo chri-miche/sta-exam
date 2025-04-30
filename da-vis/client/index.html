@@ -37,6 +37,9 @@
       <button class="selected" onclick="selectNet(net_1, this)">
         Net 1
       </button>
+      <button onclick="selectNet(path_ish_net, this)">
+        Net 2
+      </button>
       <button onclick="selectNet(ring_net, this)">
         Ring net
       </button>
@@ -49,9 +52,6 @@
       <button onclick="selectNet(sparse_net, this)">
         Sparse net
       </button>
-      <button onclick="selectNet(path_ish_net, this)">
-        Net 2
-      </button>
       <button id="forest-net-btn" onclick="selectNet(forest_net, this)">
         Forest net
       </button>
@@ -60,11 +60,15 @@
       <p id="display-phase">
         
       </p>
+    </div>
+    <div style="display: flex;flex-direction: column;align-items: end;">
+      <!--
       <p id="display-rounds">
         
       </p>
-    </div>
-    <div>
+      -->
+      <label>Communication round timeout (ms)</label>
+      <input id="seconds-inpt" value="500" type="number"/>
     </div>
   </nav>
 
@@ -72,7 +76,12 @@
 
     <!-- algorithm selection -->
     <section>
-      <h3>Run algorithm</h3>
+      <div style="display: flex;justify-content: space-between;align-items: center;">
+        <h3>Run algorithm</h3> 
+        <a id="pause-btn" onclick="togglePause()">
+          ⏸️
+        </a>
+      </div>
       <button onclick="main([wave_1])">
         Wave
       </button>
@@ -91,21 +100,22 @@
 
     <!-- pulsantiera icone -->
     <section>
-      <button class="icon-btn" onclick="oneStep()">
+      <!--
+      <button onclick="oneStep()">
         ⏯️
       </button>
-      <button id="pause-btn" class="icon-btn" onclick="togglePause()">
-        ⏸️
-      </button>
+      -->
+      <!--
       <button class="warn icon-btn" onclick="reset()">
         🔂
       </button>
+      -->
     </section>
 
   </main>
 
   <footer>
-    Made with ❤️‍🔥 by chri-miche
+    github.com/chri-miche
   </footer>
 
   <script src="app.js"></script>

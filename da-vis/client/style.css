@@ -32,6 +32,17 @@ main {
 
 }
 
+input {
+    border: none;
+    border-bottom: 1px solid #002147;
+    font-size: 15pt;
+}
+
+a {
+    cursor: pointer;
+    font-size: 20pt;
+}
+
 section {
     display: flex;
     flex-direction: column;
