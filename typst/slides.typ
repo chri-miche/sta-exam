@@ -102,8 +102,7 @@
 #show raw: set text(font: "Iosevka Extended")
 
 #set text(font: (
-  // "EB Garamond",
-  "Marianne",
+  "FreeSans",
   "Noto Color Emoji",
 ), weight: "regular", size: 26pt)
 
@@ -1311,8 +1310,8 @@
   title: [Phase Invariants $forall i in [0..b]$]
 )[
   3. $|V_i| >= (1 - frac(i, 2b)) |V|$
-    - $V_0 >= V$
-    - $V' >= frac(1, 2) |V|$
+    - $|V_0| >= |V|$
+    - $|V'| >= frac(1, 2) |V|$
   
   - *_"The algorithm clusters at least half of the nodes"_*
 ]
