@@ -29,6 +29,8 @@ This folder contains the code for the Distributed Algorithm Visualizer. It is a 
 * the library [RXJS](https://rxjs.dev/).
 Please note that the respective minified files are served locally.
 
+To use the visualizer, just open the `index.html` file in any browser (tested on Firefox and Chrome).
+
 The file `da-runtime.js` contains the runtime implementation for the LOCAL model (there is no software enforcement for message sizes).
 Please note that this file is loaded _before_ the html page is loaded.
 
